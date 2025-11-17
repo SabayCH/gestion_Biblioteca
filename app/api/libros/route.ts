@@ -60,7 +60,7 @@ export async function POST(request: NextRequest) {
     const parsedBody = libroSchema.safeParse(body)
 
     if (!parsedBody.success) {
-      return NextResponse.json({ error: parsedBody.error.errors }, { status: 400 })
+      return NextResponse.json({ error: parsedBody.error.issues }, { status: 400 })
     }
     const { isbn, ...data } = parsedBody.data
 
