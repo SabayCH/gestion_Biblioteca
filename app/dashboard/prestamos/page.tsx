@@ -6,7 +6,7 @@ export default async function PrestamosPage() {
   const prestamos = await prisma.prestamo.findMany({
     include: {
       libro: true,
-      user: true,
+      operador: true,
     },
     orderBy: { fechaPrestamo: 'desc' },
   })
@@ -64,4 +64,5 @@ export default async function PrestamosPage() {
     </div>
   )
 }
+
 

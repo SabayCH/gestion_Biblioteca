@@ -2,8 +2,18 @@
 @tailwind components;
 @tailwind utilities;
 
+@layer base {
+  input,
+  textarea,
+  select {
+    @apply bg-gray-50 text-gray-900 border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500;
+    @apply dark:bg-gray-700 dark:text-gray-200 dark:border-gray-600 dark:placeholder-gray-400;
+  }
+}
+
 @layer utilities {
   .text-balance {
     text-wrap: balance;
   }
 }
+

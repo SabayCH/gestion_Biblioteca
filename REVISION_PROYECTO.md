@@ -164,3 +164,4 @@ Todas las dependencias en `package.json` son correctas:
 6. (Opcional) Agregar más validaciones
 7. (Opcional) Mejorar manejo de errores en UI
 
+

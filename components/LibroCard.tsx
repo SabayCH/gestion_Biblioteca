@@ -75,3 +75,4 @@ export default function LibroCard({ libro }: LibroCardProps) {
   )
 }
 
+

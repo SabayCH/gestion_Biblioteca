@@ -20,7 +20,8 @@ model User {
   updatedAt DateTime @updatedAt
   
   // Relaciones
-  prestamos Prestamo[]
+  prestamosOperador Prestamo[]
+  auditLogs         AuditLog[]
 }
 
 model Libro {
@@ -42,24 +43,28 @@ model Libro {
 }
 
 model Prestamo {
-  id              String   @id @default(cuid())
-  libroId         String
-  userId          String
-  fechaPrestamo   DateTime @default(now())
-  fechaDevolucion DateTime?
-  fechaLimite     DateTime
-  estado          EstadoPrestamo @default(ACTIVO)
-  observaciones   String?
-  createdAt       DateTime @default(now())
-  updatedAt       DateTime @updatedAt
+  id                  String         @id @default(cuid())
+  libroId             String
+  usuarioId           String // Operador responsable
+  nombrePrestatario   String         // Nombre del prestatario
+  dni                 String         // DNI del prestatario (OBLIGATORIO)
+  email               String?        // Email del prestatario (opcional)
+  fechaPrestamo       DateTime       @default(now())
+  fechaDevolucion     DateTime?
+  fechaLimite         DateTime
+  estado              EstadoPrestamo @default(ACTIVO)
+  observaciones       String?
+  createdAt           DateTime       @default(now())
+  updatedAt           DateTime       @updatedAt
   
   // Relaciones
-  libro Libro @relation(fields: [libroId], references: [id])
-  user  User  @relation(fields: [userId], references: [id])
+  libro   Libro @relation(fields: [libroId], references: [id])
+  operador User @relation("OperadorPrestamos", fields: [usuarioId], references: [id])
   
   @@index([libroId])
-  @@index([userId])
+  @@index([usuarioId])
   @@index([estado])
+  @@index([dni])
 }
 
 enum Role {
@@ -71,4 +76,21 @@ enum EstadoPrestamo {
   ACTIVO
   DEVUELTO
   VENCIDO
+}
+
+model AuditLog {
+  id        String   @id @default(cuid())
+  action    String   // CREAR, ACTUALIZAR, ELIMINAR, DEVOLVER, etc.
+  entity    String   // Prestamo, Libro, User, etc.
+  entityId  String?  // ID de la entidad afectada
+  usuarioId String   // Usuario que realizó la acción
+  detalles  String?  // Información adicional
+  createdAt DateTime @default(now())
+  
+  // Relaciones
+  usuario User @relation(fields: [usuarioId], references: [id])
+  
+  @@index([usuarioId])
+  @@index([entity])
+  @@index([createdAt])
 }

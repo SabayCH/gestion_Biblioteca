@@ -30,7 +30,12 @@ export async function PUT(
       )
     }
 
-    // Actualizar préstamo y disponibilidad del libro
+    // Obtener información del libro para auditoría
+    const libro = await prisma.libro.findUnique({
+      where: { id: prestamo.libroId },
+    })
+
+    // Actualizar préstamo, disponibilidad del libro y registrar auditoría
     const updated = await prisma.$transaction(async (tx) => {
       const prestamoActualizado = await tx.prestamo.update({
         where: { id: prestamoId },
@@ -45,6 +50,17 @@ export async function PUT(
         data: { disponible: { increment: 1 } },
       })
 
+      // Registrar en auditoría
+      await tx.auditLog.create({
+        data: {
+          action: 'DEVOLVER',
+          entity: 'Prestamo',
+          entityId: prestamoActualizado.id,
+          usuarioId: session.user.id,
+          detalles: `Préstamo devuelto: ${libro?.titulo || 'Libro'} - Prestatario: ${prestamoActualizado.nombrePrestatario} (DNI: ${prestamoActualizado.dni})`,
+        },
+      })
+
       return prestamoActualizado
     })
 
@@ -56,4 +72,5 @@ export async function PUT(
     )
   }
 }
+
 

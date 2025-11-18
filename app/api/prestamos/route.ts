@@ -13,7 +13,7 @@ export async function GET() {
     const prestamos = await prisma.prestamo.findMany({
       include: {
         libro: true,
-        user: true,
+        operador: true,
       },
       orderBy: { fechaPrestamo: 'desc' },
     })
@@ -35,11 +35,12 @@ export async function POST(request: NextRequest) {
     }
 
     const body = await request.json()
-    const { libroId, userId, fechaLimite, observaciones } = body
+    const { libroId, nombrePrestatario, dni, email, fechaLimite, observaciones } = body
 
-    if (!libroId || !userId || !fechaLimite) {
+    // VALIDACIÓN 1: Campos obligatorios
+    if (!libroId || !nombrePrestatario || !dni || !fechaLimite) {
       return NextResponse.json(
-        { error: 'Libro, usuario y fecha límite son requeridos' },
+        { error: 'Libro, nombre del prestatario, DNI y fecha límite son requeridos' },
         { status: 400 }
       )
     }
@@ -60,29 +61,49 @@ export async function POST(request: NextRequest) {
       )
     }
 
-    // Verificar que el usuario existe
-    const user = await prisma.user.findUnique({
-      where: { id: userId },
+    // VALIDACIÓN 2: Validar morosos por DNI
+    const prestamoExistente = await prisma.prestamo.findFirst({
+      where: {
+        dni: dni.trim(), // Usar trim para evitar espacios
+        estado: 'ACTIVO',
+      },
     })
 
-    if (!user) {
-      return NextResponse.json({ error: 'Usuario no encontrado' }, { status: 404 })
+    if (prestamoExistente) {
+      return NextResponse.json(
+        { error: `El usuario con DNI ${dni} ya tiene un libro pendiente` },
+        { status: 400 }
+      )
     }
 
-    // Crear préstamo y actualizar disponibilidad
+    // Crear préstamo, actualizar disponibilidad y registrar auditoría
     const prestamo = await prisma.$transaction(async (tx) => {
       const nuevoPrestamo = await tx.prestamo.create({
         data: {
           libroId,
-          userId,
+          usuarioId: session.user.id, // Operador responsable
+          nombrePrestatario: nombrePrestatario.trim(),
+          dni: dni.trim(), // Guardar como String para preservar ceros a la izquierda
+          email: email?.trim() || null,
           fechaLimite: new Date(fechaLimite),
-          observaciones: observaciones || null,
+          observaciones: observaciones?.trim() || null,
         },
       })
 
       await tx.libro.update({
         where: { id: libroId },
         data: { disponible: { decrement: 1 } },
+      })
+
+      // Registrar en auditoría
+      await tx.auditLog.create({
+        data: {
+          action: 'CREAR',
+          entity: 'Prestamo',
+          entityId: nuevoPrestamo.id,
+          usuarioId: session.user.id,
+          detalles: `Préstamo creado: ${libro.titulo} para ${nombrePrestatario} (DNI: ${dni})`,
+        },
       })
 
       return nuevoPrestamo
@@ -96,4 +117,5 @@ export async function POST(request: NextRequest) {
     )
   }
 }
+
 

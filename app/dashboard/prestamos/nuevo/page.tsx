@@ -10,10 +10,11 @@ export default function NuevoPrestamoPage() {
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
   const [libros, setLibros] = useState<any[]>([])
-  const [usuarios, setUsuarios] = useState<any[]>([])
   const [formData, setFormData] = useState({
     libroId: '',
-    userId: '',
+    nombrePrestatario: '',
+    dni: '',
+    email: '',
     fechaLimite: format(addDays(new Date(), 15), 'yyyy-MM-dd'),
     observaciones: '',
   })
@@ -22,10 +23,6 @@ export default function NuevoPrestamoPage() {
     fetch('/api/libros')
       .then((res) => res.json())
       .then((data) => setLibros(data.filter((l: any) => l.disponible > 0)))
-
-    fetch('/api/usuarios')
-      .then((res) => res.json())
-      .then((data) => setUsuarios(data))
   }, [])
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -94,23 +91,48 @@ export default function NuevoPrestamoPage() {
         </div>
 
         <div>
-          <label htmlFor="userId" className="block text-sm font-medium text-gray-700 mb-1">
-            Usuario *
+          <label htmlFor="nombrePrestatario" className="block text-sm font-medium text-gray-700 mb-1">
+            Nombre del Prestatario *
           </label>
-          <select
-            id="userId"
+          <input
+            type="text"
+            id="nombrePrestatario"
             required
             className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-indigo-500 focus:border-indigo-500"
-            value={formData.userId}
-            onChange={(e) => setFormData({ ...formData, userId: e.target.value })}
-          >
-            <option value="">Seleccionar usuario...</option>
-            {usuarios.map((usuario) => (
-              <option key={usuario.id} value={usuario.id}>
-                {usuario.name} ({usuario.email})
-              </option>
-            ))}
-          </select>
+            placeholder="Ej: Juan Pérez"
+            value={formData.nombrePrestatario}
+            onChange={(e) => setFormData({ ...formData, nombrePrestatario: e.target.value })}
+          />
+        </div>
+
+        <div>
+          <label htmlFor="dni" className="block text-sm font-medium text-gray-700 mb-1">
+            DNI *
+          </label>
+          <input
+            type="text"
+            id="dni"
+            required
+            className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-indigo-500 focus:border-indigo-500"
+            placeholder="Ej: 12345678"
+            value={formData.dni}
+            onChange={(e) => setFormData({ ...formData, dni: e.target.value })}
+          />
+          <p className="text-xs text-gray-500 mt-1">El sistema validará si hay préstamos pendientes con este DNI</p>
+        </div>
+
+        <div>
+          <label htmlFor="email" className="block text-sm font-medium text-gray-700 mb-1">
+            Email del Prestatario (Opcional)
+          </label>
+          <input
+            type="email"
+            id="email"
+            className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-indigo-500 focus:border-indigo-500"
+            placeholder="Ej: juan.perez@email.com"
+            value={formData.email}
+            onChange={(e) => setFormData({ ...formData, email: e.target.value })}
+          />
         </div>
 
         <div>
@@ -159,4 +181,5 @@ export default function NuevoPrestamoPage() {
     </div>
   )
 }
+
 

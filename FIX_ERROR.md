@@ -28,3 +28,4 @@ npx prisma generate
 ## Verificación
 Después de ejecutar `prisma generate`, el error debería desaparecer y el archivo `seed.ts` debería reconocer el módulo.
 
+

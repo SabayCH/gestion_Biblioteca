@@ -6,7 +6,7 @@ import { useState } from 'react'
 import { useRouter } from 'next/navigation'
 
 type PrestamoWithRelations = Prisma.PrestamoGetPayload<{
-  include: { libro: true; user: true }
+  include: { libro: true; operador: true }
 }>
 
 interface PrestamoCardProps {
@@ -59,7 +59,13 @@ export default function PrestamoCard({ prestamo }: PrestamoCardProps) {
           </h3>
           <p className="text-gray-600 text-sm">por {prestamo.libro.autor}</p>
           <p className="text-gray-500 text-xs mt-1">
-            Prestado a: <span className="font-medium">{prestamo.user.name}</span>
+            Prestatario: <span className="font-medium">{prestamo.nombrePrestatario}</span>
+          </p>
+          <p className="text-gray-500 text-xs">
+            DNI: <span className="font-medium">{prestamo.dni}</span>
+          </p>
+          <p className="text-gray-400 text-xs mt-1">
+            Registrado por: <span className="font-medium">{prestamo.operador.name}</span>
           </p>
         </div>
         <span
