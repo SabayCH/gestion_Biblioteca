@@ -11,11 +11,8 @@ export default function NuevoLibroPage() {
   const [formData, setFormData] = useState({
     titulo: '',
     autor: '',
-    isbn: '',
-    editorial: '',
-    anio: '',
-    categoria: '',
-    descripcion: '',
+    fechaRegistro: '',
+    numeroRegistro: '',
     cantidad: '1',
   })
 
@@ -29,8 +26,10 @@ export default function NuevoLibroPage() {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          ...formData,
-          anio: formData.anio ? parseInt(formData.anio) : null,
+          titulo: formData.titulo,
+          autor: formData.autor || null,
+          fechaRegistro: formData.fechaRegistro || null,
+          numeroRegistro: formData.numeroRegistro || null,
           cantidad: parseInt(formData.cantidad),
           disponible: parseInt(formData.cantidad),
         }),
@@ -51,150 +50,119 @@ export default function NuevoLibroPage() {
   }
 
   return (
-    <div className="max-w-2xl mx-auto">
-      <div className="mb-8">
-        <Link
-          href="/dashboard/inventario"
-          className="text-indigo-600 hover:text-indigo-700 mb-4 inline-block"
-        >
-          ← Volver al inventario
+    <div className="space-y-6">
+      {/* Header */}
+      <div>
+        <Link href="/dashboard/inventario" className="text-sm text-purple-600 hover:text-purple-700 flex items-center mb-3">
+          <svg className="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
+          </svg>
+          Volver al inventario
         </Link>
-        <h1 className="text-3xl font-bold text-gray-900">Agregar Nuevo Libro</h1>
+        <h1 className="text-2xl font-bold text-gray-900">Agregar Nuevo Libro</h1>
+        <p className="text-gray-600 mt-1">Complete la información del libro</p>
       </div>
 
-      <form onSubmit={handleSubmit} className="bg-white rounded-lg shadow p-6 space-y-6">
+      {/* Formulario */}
+      <form onSubmit={handleSubmit} className="card space-y-6">
         {error && (
-          <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded">
+          <div className="bg-rose-50 border border-rose-200 text-rose-700 px-4 py-3 rounded-lg text-sm">
             {error}
           </div>
         )}
 
-        <div>
-          <label htmlFor="titulo" className="block text-sm font-medium text-gray-700 mb-1">
-            Título *
+        {/* Información Note */}
+        <div className="bg-purple-50 border border-purple-200 px-4 py-3 rounded-lg">
+          <p className="text-sm text-purple-700">
+            <strong>Nota:</strong> Solo el título y la cantidad son obligatorios. Los demás campos son opcionales.
+          </p>
+        </div>
+
+        {/* Título */}
+        <div className="input-group">
+          <label htmlFor="titulo" className="input-label">
+            Título <span className="text-rose-500">*</span>
           </label>
           <input
-            type="text"
             id="titulo"
+            type="text"
             required
-            className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-indigo-500 focus:border-indigo-500"
+            placeholder="Ingrese el título del libro"
             value={formData.titulo}
             onChange={(e) => setFormData({ ...formData, titulo: e.target.value })}
           />
         </div>
 
-        <div className="grid grid-cols-2 gap-4">
-          <div>
-            <label htmlFor="autor" className="block text-sm font-medium text-gray-700 mb-1">
-              Autor *
-            </label>
-            <input
-              type="text"
-              id="autor"
-              required
-              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-indigo-500 focus:border-indigo-500"
-              value={formData.autor}
-              onChange={(e) => setFormData({ ...formData, autor: e.target.value })}
-            />
-          </div>
-
-          <div>
-            <label htmlFor="isbn" className="block text-sm font-medium text-gray-700 mb-1">
-              ISBN
-            </label>
-            <input
-              type="text"
-              id="isbn"
-              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-indigo-500 focus:border-indigo-500"
-              value={formData.isbn}
-              onChange={(e) => setFormData({ ...formData, isbn: e.target.value })}
-            />
-          </div>
-        </div>
-
-        <div className="grid grid-cols-2 gap-4">
-          <div>
-            <label htmlFor="editorial" className="block text-sm font-medium text-gray-700 mb-1">
-              Editorial
-            </label>
-            <input
-              type="text"
-              id="editorial"
-              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-indigo-500 focus:border-indigo-500"
-              value={formData.editorial}
-              onChange={(e) => setFormData({ ...formData, editorial: e.target.value })}
-            />
-          </div>
-
-          <div>
-            <label htmlFor="anio" className="block text-sm font-medium text-gray-700 mb-1">
-              Año
-            </label>
-            <input
-              type="number"
-              id="anio"
-              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-indigo-500 focus:border-indigo-500"
-              value={formData.anio}
-              onChange={(e) => setFormData({ ...formData, anio: e.target.value })}
-            />
-          </div>
-        </div>
-
-        <div className="grid grid-cols-2 gap-4">
-          <div>
-            <label htmlFor="categoria" className="block text-sm font-medium text-gray-700 mb-1">
-              Categoría
-            </label>
-            <input
-              type="text"
-              id="categoria"
-              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-indigo-500 focus:border-indigo-500"
-              value={formData.categoria}
-              onChange={(e) => setFormData({ ...formData, categoria: e.target.value })}
-            />
-          </div>
-
-          <div>
-            <label htmlFor="cantidad" className="block text-sm font-medium text-gray-700 mb-1">
-              Cantidad *
-            </label>
-            <input
-              type="number"
-              id="cantidad"
-              required
-              min="1"
-              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-indigo-500 focus:border-indigo-500"
-              value={formData.cantidad}
-              onChange={(e) => setFormData({ ...formData, cantidad: e.target.value })}
-            />
-          </div>
-        </div>
-
-        <div>
-          <label htmlFor="descripcion" className="block text-sm font-medium text-gray-700 mb-1">
-            Descripción
+        {/* Autor */}
+        <div className="input-group">
+          <label htmlFor="autor" className="input-label">
+            Autor <span className="text-gray-400 text-xs">(Opcional)</span>
           </label>
-          <textarea
-            id="descripcion"
-            rows={4}
-            className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-indigo-500 focus:border-indigo-500"
-            value={formData.descripcion}
-            onChange={(e) => setFormData({ ...formData, descripcion: e.target.value })}
+          <input
+            id="autor"
+            type="text"
+            placeholder="Ingrese el nombre del autor"
+            value={formData.autor}
+            onChange={(e) => setFormData({ ...formData, autor: e.target.value })}
           />
         </div>
 
-        <div className="flex gap-4">
+        {/* Grid de 2 columnas */}
+        <div className="grid grid-cols-2 gap-6">
+          <div className="input-group">
+            <label htmlFor="fechaRegistro" className="input-label">
+              Fecha de Registro <span className="text-gray-400 text-xs">(Opcional)</span>
+            </label>
+            <input
+              id="fechaRegistro"
+              type="date"
+              value={formData.fechaRegistro}
+              onChange={(e) => setFormData({ ...formData, fechaRegistro: e.target.value })}
+            />
+          </div>
+
+          <div className="input-group">
+            <label htmlFor="numeroRegistro" className="input-label">
+              N° de Registro <span className="text-gray-400 text-xs">(Opcional)</span>
+            </label>
+            <input
+              id="numeroRegistro"
+              type="text"
+              placeholder="Ej: REG-2024-001"
+              value={formData.numeroRegistro}
+              onChange={(e) => setFormData({ ...formData, numeroRegistro: e.target.value })}
+            />
+          </div>
+        </div>
+
+        {/* Cantidad */}
+        <div className="input-group">
+          <label htmlFor="cantidad" className="input-label">
+            Cantidad de Ejemplares <span className="text-rose-500">*</span>
+          </label>
+          <input
+            id="cantidad"
+            type="number"
+            required
+            min="1"
+            value={formData.cantidad}
+            onChange={(e) => setFormData({ ...formData, cantidad: e.target.value })}
+          />
+          <p className="text-sm text-gray-500 mt-1">
+            Todos los ejemplares estarán disponibles inicialmente
+          </p>
+        </div>
+
+        {/* Botones */}
+        <div className="flex gap-3 pt-4">
           <button
             type="submit"
             disabled={loading}
-            className="flex-1 bg-indigo-600 text-white py-2 rounded-md hover:bg-indigo-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+            className="btn-primary flex-1"
           >
             {loading ? 'Guardando...' : 'Guardar Libro'}
           </button>
-          <Link
-            href="/dashboard/inventario"
-            className="flex-1 bg-gray-200 text-gray-700 text-center py-2 rounded-md hover:bg-gray-300 transition-colors"
-          >
+          <Link href="/dashboard/inventario" className="btn-secondary flex-1 text-center">
             Cancelar
           </Link>
         </div>
@@ -202,5 +170,3 @@ export default function NuevoLibroPage() {
     </div>
   )
 }
-
-

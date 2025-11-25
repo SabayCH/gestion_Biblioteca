@@ -25,21 +25,19 @@ model User {
 }
 
 model Libro {
-  id          String   @id @default(cuid())
-  titulo      String
-  autor       String
-  isbn        String?  @unique
-  editorial   String?
-  anio        Int?
-  categoria   String?
-  descripcion String?
-  cantidad    Int      @default(0)
-  disponible  Int      @default(0)
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
+  id              String    @id @default(cuid())
+  numero          Int?      // Número consecutivo (se calcula en la app)
+  fechaRegistro   DateTime? // Fecha de registro del libro (opcional)
+  numeroRegistro  String?   // Número de registro administrativo (opcional)
+  titulo          String    // Título del libro (obligatorio)
+  autor           String?   // Autor del libro (opcional)
+  cantidad        Int       @default(1)
+  disponible      Int       @default(1)
+  createdAt       DateTime  @default(now())
+  updatedAt       DateTime  @updatedAt
   
   // Relaciones
-  prestamos   Prestamo[]
+  prestamos       Prestamo[]
 }
 
 model Prestamo {

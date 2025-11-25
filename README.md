@@ -1,225 +1,143 @@
-# Sistema de Gestión de Biblioteca
+# 📚 Sistema de Gestión de Biblioteca
 
-Sistema especializado para gestión de biblioteca desarrollado con Next.js 14, React, TypeScript, Prisma y NextAuth.js.
+Sistema moderno de gestión de biblioteca desarrollado con Next.js 14, TypeScript, Prisma y SQLite.
 
-## 🚀 Características
+## ✨ Características
 
-- ✅ **Autenticación segura**: Sistema de login con NextAuth.js
-- ✅ **Gestión de usuarios**: Inicio con admin, escalable para múltiples usuarios
-- ✅ **Inventario de libros**: CRUD completo para gestión de existencias
-- ✅ **Sistema de préstamos**: Registro y seguimiento de préstamos con fechas
-- ✅ **Dashboard**: Vista general con estadísticas del sistema
-- ✅ **Interfaz moderna**: Diseño responsivo con Tailwind CSS
+- 🔐 **Autenticación de usuarios** con roles (Admin/Usuario)
+- 📖 **Gestión de inventario** de libros
+- 📋 **Sistema de préstamos** con seguimiento de fechas
+- 👥 **Administración de usuarios**
+- 📊 **Dashboard con estadísticas** en tiempo real
+- 🔍 **Búsqueda y filtrado** avanzado
+- 📝 **Registro de auditoría** de acciones
 
-## 📋 Requisitos Previos
+## 🚀 Inicio Rápido
 
-- Node.js 18+ 
-- npm o yarn
+### Requisitos Previos
 
-## 🔧 Instalación
+- Node.js 18+ instalado
+- npm o pnpm
 
-1. **Clonar el repositorio** (o usar este directorio)
+### Instalación
 
-2. **Instalar dependencias:**
+1. **Clonar el repositorio**
+```bash
+git clone <repo-url>
+cd gestorDocumentos
+```
+
+2. **Instalar dependencias**
 ```bash
 npm install
 ```
 
-3. **Configurar variables de entorno:**
-
-Crea un archivo `.env` en la raíz del proyecto:
-```env
-# Base de datos
-DATABASE_URL="file:./dev.db"
-
-# NextAuth
-NEXTAUTH_URL=http://localhost:3000
-NEXTAUTH_SECRET=tu-secret-key-super-segura-aqui-genera-una-con-openssl
-
-# Credenciales del administrador inicial (opcional)
-ADMIN_EMAIL=admin@biblioteca.com
-ADMIN_PASSWORD=admin123
+3. **Configurar variables de entorno**
+```bash
+cp .env.example .env
 ```
 
-**Para generar NEXTAUTH_SECRET:**
+4. **Inicializar la base de datos**
 ```bash
-openssl rand -base64 32
-```
-
-4. **Configurar la base de datos:**
-```bash
-# Generar cliente Prisma
-npm run db:generate
-
-# Crear la base de datos y tablas
 npm run db:push
-
-# (Opcional) Crear migraciones
-npm run db:migrate
-
-# Poblar con datos iniciales (crea usuario admin y libros de ejemplo)
 npm run db:seed
 ```
 
-5. **Iniciar el servidor de desarrollo:**
+5. **Iniciar el servidor de desarrollo**
 ```bash
 npm run dev
 ```
 
-6. **Abrir en el navegador:**
+6. **Abrir en el navegador**
 ```
 http://localhost:3000
 ```
 
-## 👤 Credenciales por Defecto
+## 👤 Cuentas de Demo
 
-Después de ejecutar el seed, puedes iniciar sesión con:
-
+### Admin
 - **Email:** admin@biblioteca.com
 - **Contraseña:** admin123
 
-*Nota: Cambia estas credenciales en producción*
+### Usuarios
+- **Email:** operador1@biblioteca.com | **Contraseña:** 123456
+- **Email:** operador2@biblioteca.com | **Contraseña:** 123456
+- **Email:** supervisor@biblioteca.com | **Contraseña:** supervisor123
+
+## 🛠️ Scripts Disponibles
+
+```bash
+npm run dev          # Inicia el servidor de desarrollo
+npm run build        # Compila para producción
+npm run start        # Inicia el servidor de producción
+npm run db:push      # Sincroniza el esquema de Prisma con la BD
+npm run db:seed      # Pobla la BD con datos de prueba
+npm run db:studio    # Abre Prisma Studio (GUI para la BD)
+```
 
 ## 📁 Estructura del Proyecto
 
 ```
-├── app/                      # App Router de Next.js
-│   ├── api/                  # API Routes
-│   │   ├── auth/             # NextAuth endpoints
-│   │   ├── libros/           # API de libros
-│   │   ├── prestamos/        # API de préstamos
-│   │   └── usuarios/         # API de usuarios
-│   ├── dashboard/            # Páginas del dashboard
-│   │   ├── inventario/       # Gestión de inventario
-│   │   ├── prestamos/        # Gestión de préstamos
-│   │   └── usuarios/         # Gestión de usuarios
-│   ├── login/                # Página de login
-│   └── layout.tsx            # Layout principal
-├── components/               # Componentes React reutilizables
-├── lib/                      # Utilidades y configuraciones
-│   ├── auth.ts               # Configuración NextAuth
-│   └── prisma.ts             # Cliente Prisma
-├── prisma/                   # Schema y migraciones de Prisma
-│   ├── schema.prisma         # Schema de la base de datos
-│   └── seed.ts               # Script de seed
-└── types/                    # Definiciones de TypeScript
+├── app/                    # App Router de Next.js
+│   ├── api/               # API Routes
+│   │   ├── auth/         # Autenticación
+│   │   ├── libros/       # CRUD de libros
+│   │   ├── prestamos/    # CRUD de préstamos
+│   │   └── usuarios/     # CRUD de usuarios
+│   ├── dashboard/        # Páginas del dashboard
+│   ├── login/           # Página de login
+│   └── globals.css      # Estilos globales
+├── components/           # Componentes reutilizables
+├── lib/                 # Utilidades y configuración
+├── prisma/              # Configuración de Prisma
+│   ├── schema.prisma   # Esquema de la BD
+│   └── seed.js         # Datos de prueba
+└── types/              # Tipos de TypeScript
 ```
 
-## 🗄️ Modelos de Datos
+## 🗄️ Modelo de Datos
 
-### User (Usuario)
-- `id`: Identificador único
-- `email`: Email único del usuario
-- `name`: Nombre completo
-- `password`: Contraseña hasheada
-- `role`: Rol (ADMIN o USER)
+### Usuario (User)
+- Autenticación y autorización
+- Roles: ADMIN, USER
+- Relación con préstamos y logs de auditoría
 
 ### Libro
-- `id`: Identificador único
-- `titulo`: Título del libro
-- `autor`: Autor del libro
-- `isbn`: ISBN (opcional, único)
-- `editorial`: Editorial
-- `anio`: Año de publicación
-- `categoria`: Categoría del libro
-- `descripcion`: Descripción
-- `cantidad`: Cantidad total
-- `disponible`: Cantidad disponible
+- Información completa del libro
+- Control de inventario (cantidad/disponible)
+- Campos opcionales para flexibilidad
 
-### Prestamo
-- `id`: Identificador único
-- `libroId`: ID del libro prestado
-- `userId`: ID del usuario que solicita
-- `fechaPrestamo`: Fecha de préstamo
-- `fechaDevolucion`: Fecha de devolución (null si activo)
-- `fechaLimite`: Fecha límite de devolución
-- `estado`: ACTIVO, DEVUELTO, VENCIDO
-- `observaciones`: Notas adicionales
+### Préstamo
+- Gestión completa del ciclo de préstamo
+- Estados: ACTIVO, DEVUELTO, VENCIDO
+- Relación con libro y operador
 
-## 📝 Scripts Disponibles
+### Log de Auditoría
+- Registro de todas las acciones importantes
+- Trazabilidad completa del sistema
 
-```bash
-# Desarrollo
-npm run dev              # Iniciar servidor de desarrollo
+## 🎨 Tecnologías
 
-# Producción
-npm run build            # Construir para producción
-npm start                # Iniciar servidor de producción
+- **Frontend:** Next.js 14, React 18, TailwindCSS
+- **Backend:** Next.js API Routes, NextAuth.js
+- **Base de Datos:** SQLite con Prisma ORM
+- **Validación:** Zod
+- **Autenticación:** NextAuth.js con bcrypt
 
-# Base de datos
-npm run db:generate      # Generar cliente Prisma
-npm run db:push          # Sincronizar schema con BD (desarrollo)
-npm run db:migrate       # Crear migración
-npm run db:seed          # Poblar datos iniciales
-npm run db:studio        # Abrir Prisma Studio (GUI de BD)
+## 📝 Notas
 
-# Linting
-npm run lint             # Ejecutar ESLint
-```
+- La BD SQLite está en `prisma/dev.db`
+- Los datos de semilla incluyen 15 libros y 13 préstamos de ejemplo
+- El sistema valida usuarios morosos (no permite préstamos si tienen libros pendientes)
+- Los administradores tienen acceso completo, los usuarios solo pueden operar préstamos
 
 ## 🔒 Seguridad
 
-- Las contraseñas se hashean con bcryptjs
-- Las rutas del dashboard requieren autenticación
-- Las APIs están protegidas con verificación de sesión
-- Variables sensibles en archivos `.env`
-
-## 🚀 Próximos Pasos
-
-1. **Mejoras sugeridas:**
-   - Búsqueda avanzada de libros
-   - Filtros por categoría, autor, etc.
-   - Exportar reportes a PDF/Excel
-   - Notificaciones de préstamos vencidos
-   - Historial completo de préstamos por usuario/libro
-   - Código de barras para libros
-   - Reservas de libros
-
-2. **Escalabilidad:**
-   - Cambiar a PostgreSQL para producción
-   - Implementar paginación en listados
-   - Cache con Redis (opcional)
-   - Sistema de logs
-
-## 📚 Tecnologías Utilizadas
-
-- **Next.js 14**: Framework React con App Router
-- **React 18**: Biblioteca UI
-- **TypeScript**: Tipado estático
-- **Prisma**: ORM para base de datos
-- **NextAuth.js**: Autenticación
-- **Tailwind CSS**: Estilos
-- **bcryptjs**: Hash de contraseñas
-- **date-fns**: Manejo de fechas
-- **SQLite**: Base de datos (fácil cambio a PostgreSQL)
-
-## 🐛 Solución de Problemas
-
-**Error de conexión a la base de datos:**
-- Asegúrate de haber ejecutado `npm run db:push`
-- Verifica que el archivo `.env` tenga `DATABASE_URL` correcto
-
-**Error de autenticación:**
-- Verifica que `NEXTAUTH_SECRET` esté configurado
-- Asegúrate de haber ejecutado el seed para crear el usuario admin
-
-**Error al crear usuario:**
-- Verifica que el email no esté duplicado
-- Asegúrate de que la contraseña tenga al menos 6 caracteres
+- Contraseñas hasheadas con bcrypt
+- Autenticación por sesión con NextAuth
+- Validación en frontend y backend
+- Control de acceso basado en roles
 
 ## 📄 Licencia
 
-Este proyecto es de uso libre para fines educativos y comerciales.
-
-## 👨‍💻 Desarrollo
-
-Para contribuir o hacer modificaciones:
-
-1. Crea una rama para tu feature
-2. Realiza tus cambios
-3. Prueba localmente
-4. Crea un pull request
-
----
-
-**Desarrollado con ❤️ usando Next.js y React**
+Este proyecto es de código abierto y está disponible bajo la licencia MIT.

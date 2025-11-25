@@ -2,18 +2,14 @@ import { NextRequest, NextResponse } from 'next/server'
 import { getServerSession } from 'next-auth'
 import { authOptions } from '@/lib/auth'
 import { prisma } from '@/lib/prisma'
-
 import { z } from 'zod'
 
 const libroSchema = z.object({
+  fechaRegistro: z.string().optional().nullable(),
+  numeroRegistro: z.string().optional().nullable(),
   titulo: z.string().min(1, { message: 'Título es requerido' }),
-  autor: z.string().min(1, { message: 'Autor es requerido' }),
-  isbn: z.string().optional(),
-  editorial: z.string().optional(),
-  anio: z.number().int().positive().optional(),
-  categoria: z.string().optional(),
-  descripcion: z.string().optional(),
-  cantidad: z.number().int().min(0).default(1),
+  autor: z.string().optional().nullable(),
+  cantidad: z.number().int().min(1).default(1),
   disponible: z.number().int().min(0).optional(),
 })
 
@@ -25,21 +21,37 @@ export async function GET(request: NextRequest) {
     }
 
     const { searchParams } = new URL(request.url)
-    const query = searchParams.get('q')
+    const q = searchParams.get('q') // Búsqueda general
+    const titulo = searchParams.get('titulo')
+    const autor = searchParams.get('autor')
+    const numeroRegistro = searchParams.get('numeroRegistro')
 
-    const whereClause = query
-      ? {
-          OR: [
-            { titulo: { contains: query, mode: 'insensitive' } },
-            { autor: { contains: query, mode: 'insensitive' } },
-            { isbn: { contains: query } },
-          ],
-        }
-      : {}
+    // Construir filtro dinámico
+    const whereClause: any = {}
+
+    if (q) {
+      // Búsqueda general en múltiples campos
+      whereClause.OR = [
+        { titulo: { contains: q, mode: 'insensitive' } },
+        { autor: { contains: q, mode: 'insensitive' } },
+        { numeroRegistro: { contains: q } },
+      ]
+    } else {
+      // Filtros específicos por columna
+      if (titulo) {
+        whereClause.titulo = { contains: titulo, mode: 'insensitive' }
+      }
+      if (autor) {
+        whereClause.autor = { contains: autor, mode: 'insensitive' }
+      }
+      if (numeroRegistro) {
+        whereClause.numeroRegistro = { contains: numeroRegistro }
+      }
+    }
 
     const libros = await prisma.libro.findMany({
       where: whereClause,
-      orderBy: { createdAt: 'desc' },
+      orderBy: { numero: 'asc' },
     })
 
     return NextResponse.json(libros)
@@ -62,26 +74,27 @@ export async function POST(request: NextRequest) {
     if (!parsedBody.success) {
       return NextResponse.json({ error: parsedBody.error.issues }, { status: 400 })
     }
-    const { isbn, ...data } = parsedBody.data
 
-    // Verificar si el ISBN ya existe
-    if (isbn) {
-      const existingLibro = await prisma.libro.findUnique({
-        where: { isbn },
-      })
-      if (existingLibro) {
-        return NextResponse.json(
-          { error: 'Ya existe un libro con este ISBN' },
-          { status: 400 }
-        )
-      }
-    }
+    const data = parsedBody.data
+
+    // Calcular el siguiente número consecutivo
+    const ultimoLibro = await prisma.libro.findFirst({
+      orderBy: { numero: 'desc' },
+      select: { numero: true },
+    })
+    const siguienteNumero = (ultimoLibro?.numero || 0) + 1
+
+    // Convertir fechaRegistro de string a DateTime si existe
+    const fechaRegistroDate = data.fechaRegistro ? new Date(data.fechaRegistro) : null
 
     const libro = await prisma.libro.create({
       data: {
-        ...data,
-        isbn: isbn || null,
-        // Si 'disponible' no se especifica, es igual a 'cantidad'.
+        numero: siguienteNumero,
+        fechaRegistro: fechaRegistroDate,
+        numeroRegistro: data.numeroRegistro || null,
+        titulo: data.titulo,
+        autor: data.autor ?? null,
+        cantidad: data.cantidad,
         disponible: data.disponible ?? data.cantidad,
       },
     })
@@ -98,4 +111,3 @@ export async function POST(request: NextRequest) {
     )
   }
 }
-
