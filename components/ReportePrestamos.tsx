@@ -10,7 +10,7 @@
 
 import { useState } from 'react'
 import { obtenerPrestamosPorRango } from '@/lib/actions/prestamos'
-import * as XLSX from 'xlsx'
+import { utils, writeFile } from 'xlsx'
 import { toast } from '@/lib/toast'
 
 export default function ReportePrestamos() {
@@ -31,7 +31,7 @@ export default function ReportePrestamos() {
 
         try {
             setGenerando(true)
-            toast.message('Generando reporte...', 'Por favor espera')
+            toast.info('Generando reporte...', 'Por favor espera')
 
             const datos = await obtenerPrestamosPorRango(new Date(fechaInicio), new Date(fechaFin))
 
@@ -41,8 +41,8 @@ export default function ReportePrestamos() {
             }
 
             // Crear Excel
-            const wb = XLSX.utils.book_new()
-            const ws = XLSX.utils.json_to_sheet(datos)
+            const wb = utils.book_new()
+            const ws = utils.json_to_sheet(datos)
 
             // Ancho de columnas
             const colWidths = [
@@ -61,10 +61,10 @@ export default function ReportePrestamos() {
             ]
             ws['!cols'] = colWidths
 
-            XLSX.utils.book_append_sheet(wb, ws, 'Reporte Préstamos')
+            utils.book_append_sheet(wb, ws, 'Reporte Préstamos')
 
             const nombreArchivo = `Reporte_Prestamos_${fechaInicio}_al_${fechaFin}.xlsx`
-            XLSX.writeFile(wb, nombreArchivo)
+            writeFile(wb, nombreArchivo)
 
             toast.success('Reporte descargado exitosamente')
         } catch (error) {

@@ -43,20 +43,6 @@ export default function ExportarPDFButton<T extends Record<string, any>>({
             // Crear documento PDF
             const doc = new jsPDF()
 
-            // Título
-            doc.setFontSize(16)
-            doc.setTextColor(124, 58, 237) // Color brand
-            doc.text(titulo, 14, 20)
-
-            // Fecha de generación
-            doc.setFontSize(10)
-            doc.setTextColor(100, 100, 100)
-            doc.text(`Generado: ${new Date().toLocaleDateString('es-ES')}`, 14, 28)
-
-            // Reset color para la tabla
-            doc.setTextColor(0, 0, 0)
-            doc.setFontSize(9)
-
             // Headers
             let y = 38
             doc.setFont('helvetica', 'bold')
@@ -71,7 +57,7 @@ export default function ExportarPDFButton<T extends Record<string, any>>({
 
             // Datos
             doc.setFont('helvetica', 'normal')
-            datos.forEach((fila: any, index) => {
+            datos.forEach((fila: any) => {
                 if (y > 280) { // Nueva página si es necesario
                     doc.addPage()
                     y = 20

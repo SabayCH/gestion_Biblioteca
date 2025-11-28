@@ -10,7 +10,7 @@
 
 import { useState } from 'react'
 import { obtenerLibrosParaExportar } from '@/lib/actions/libros'
-import { utils, writeFile } from 'xlsx'
+import * as XLSX from 'xlsx'
 import { toast } from '@/lib/toast'
 
 interface ExportarInventarioButtonProps {
@@ -38,8 +38,8 @@ export default function ExportarInventarioButton({
             }
 
             // 2. Crear libro de Excel
-            const wb = utils.book_new()
-            const ws = utils.json_to_sheet(datos)
+            const wb = XLSX.utils.book_new()
+            const ws = XLSX.utils.json_to_sheet(datos)
 
             // Ajustar ancho de columnas
             const colWidths = [
@@ -54,11 +54,11 @@ export default function ExportarInventarioButton({
             ]
             ws['!cols'] = colWidths
 
-            utils.book_append_sheet(wb, ws, 'Inventario')
+            XLSX.utils.book_append_sheet(wb, ws, 'Inventario')
 
             // 3. Descargar archivo
             const nombreArchivo = `Inventario_Completo_${new Date().toLocaleDateString('es-ES').replace(/\//g, '-')}.xlsx`
-            writeFile(wb, nombreArchivo)
+            XLSX.writeFile(wb, nombreArchivo)
 
             toast.success('Archivo descargado correctamente')
         } catch (error: any) {

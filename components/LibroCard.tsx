@@ -20,21 +20,18 @@ export default function LibroCard({ libro }: LibroCardProps) {
         </div>
       </div>
 
-      {libro.isbn && (
-        <p className="text-xs text-gray-500 mb-2">ISBN: {libro.isbn}</p>
-      )}
-
-      {libro.categoria && (
-        <span className="inline-block bg-blue-100 text-blue-800 text-xs px-2 py-1 rounded mb-3">
-          {libro.categoria}
-        </span>
-      )}
-
-      {libro.descripcion && (
-        <p className="text-gray-600 text-sm mb-4 line-clamp-2">
-          {libro.descripcion}
-        </p>
-      )}
+      <div className="flex gap-2 mb-3">
+        {libro.numeroRegistro && (
+          <span className="inline-flex items-center px-2 py-1 rounded text-xs font-medium bg-gray-100 text-gray-600">
+            Cód: {libro.numeroRegistro}
+          </span>
+        )}
+        {libro.sigTop && (
+          <span className="inline-flex items-center px-2 py-1 rounded text-xs font-medium bg-blue-50 text-blue-700">
+            {libro.sigTop}
+          </span>
+        )}
+      </div>
 
       <div className="mb-4">
         <div className="flex justify-between text-sm mb-1">
@@ -45,13 +42,12 @@ export default function LibroCard({ libro }: LibroCardProps) {
         </div>
         <div className="w-full bg-gray-200 rounded-full h-2">
           <div
-            className={`h-2 rounded-full ${
-              disponibilidadPorcentaje > 50
+            className={`h-2 rounded-full ${disponibilidadPorcentaje > 50
                 ? 'bg-green-500'
                 : disponibilidadPorcentaje > 20
-                ? 'bg-yellow-500'
-                : 'bg-red-500'
-            }`}
+                  ? 'bg-yellow-500'
+                  : 'bg-red-500'
+              }`}
             style={{ width: `${disponibilidadPorcentaje}%` }}
           ></div>
         </div>

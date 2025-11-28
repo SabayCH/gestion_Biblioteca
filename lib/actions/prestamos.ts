@@ -302,3 +302,42 @@ export async function obtenerPrestamos(): Promise<PrestamoConRelaciones[]> {
 
     return prestamos
 }
+
+/**
+ * Obtener préstamos por rango de fechas para reportes
+ */
+export async function obtenerPrestamosPorRango(fechaInicio: Date, fechaFin: Date) {
+    // Ajustar fecha fin al final del día
+    const fin = new Date(fechaFin)
+    fin.setHours(23, 59, 59, 999)
+
+    const prestamos = await prisma.prestamo.findMany({
+        where: {
+            fechaPrestamo: {
+                gte: fechaInicio,
+                lte: fin,
+            },
+        },
+        include: {
+            libro: true,
+            operador: true,
+        },
+        orderBy: { fechaPrestamo: 'desc' },
+    })
+
+    // Formatear para Excel
+    return prestamos.map(p => ({
+        'Libro': p.libro.titulo,
+        'Autor': p.libro.autor,
+        'Código': p.libro.numeroRegistro || '-',
+        'Prestatario': p.nombrePrestatario,
+        'DNI': p.dni,
+        'Email': p.email || '-',
+        'Fecha Préstamo': p.fechaPrestamo.toLocaleDateString('es-ES'),
+        'Fecha Límite': p.fechaLimite.toLocaleDateString('es-ES'),
+        'Fecha Devolución': p.fechaDevolucion ? p.fechaDevolucion.toLocaleDateString('es-ES') : '-',
+        'Estado': p.estado,
+        'Operador': p.operador.name,
+        'Observaciones': p.observaciones || '-',
+    }))
+}
