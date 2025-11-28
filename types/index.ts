@@ -81,8 +81,10 @@ export type CrearLibroInput = {
     numero?: number | null
     fechaRegistro?: Date | string | null
     numeroRegistro?: string | null
+    sigTop?: string | null
     titulo: string
     autor?: string | null
+    edicion?: string | null
     cantidad?: number
     disponible?: number
 }

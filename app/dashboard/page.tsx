@@ -58,10 +58,10 @@ export default async function DashboardPage() {
       </div>
 
       {/* Estadísticas Grid */}
-      <div className="grid grid-cols-2 gap-4">
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
         <div className="card group">
           <div className="flex items-center justify-between mb-3">
-            <div className="w-12 h-12 gradient-purple rounded-xl flex items-center justify-center group-hover:scale-110 transition-transform">
+            <div className="w-12 h-12 gradient-brand rounded-xl flex items-center justify-center group-hover:scale-110 transition-transform shadow-lg shadow-brand-500/20">
               <svg className="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253" />
               </svg>
@@ -73,7 +73,7 @@ export default async function DashboardPage() {
 
         <div className="card group">
           <div className="flex items-center justify-between mb-3">
-            <div className="w-12 h-12 gradient-green rounded-xl flex items-center justify-center group-hover:scale-110 transition-transform">
+            <div className="w-12 h-12 gradient-success rounded-xl flex items-center justify-center group-hover:scale-110 transition-transform shadow-lg shadow-success-500/20">
               <svg className="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
               </svg>
@@ -85,7 +85,7 @@ export default async function DashboardPage() {
 
         <div className="card group">
           <div className="flex items-center justify-between mb-3">
-            <div className="w-12 h-12 gradient-orange rounded-xl flex items-center justify-center group-hover:scale-110 transition-transform">
+            <div className="w-12 h-12 gradient-warning rounded-xl flex items-center justify-center group-hover:scale-110 transition-transform shadow-lg shadow-warning-500/20">
               <svg className="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
               </svg>
@@ -97,7 +97,7 @@ export default async function DashboardPage() {
 
         <div className="card group">
           <div className="flex items-center justify-between mb-3">
-            <div className="w-12 h-12 gradient-blue rounded-xl flex items-center justify-center group-hover:scale-110 transition-transform">
+            <div className="w-12 h-12 gradient-accent rounded-xl flex items-center justify-center group-hover:scale-110 transition-transform shadow-lg shadow-accent-500/20">
               <svg className="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
               </svg>
