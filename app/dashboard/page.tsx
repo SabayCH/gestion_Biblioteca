@@ -40,9 +40,9 @@ export default async function DashboardPage() {
 
   const getEstadoBadge = (estado: string) => {
     const badges = {
-      ACTIVO: 'bg-amber-100 text-amber-700',
-      DEVUELTO: 'bg-emerald-100 text-emerald-700',
-      VENCIDO: 'bg-rose-100 text-rose-700',
+      ACTIVO: 'bg-warning-100 text-warning-700',
+      DEVUELTO: 'bg-success-100 text-success-700',
+      VENCIDO: 'bg-danger-100 text-danger-700',
     }
     return badges[estado as keyof typeof badges] || 'bg-gray-100 text-gray-700'
   }
@@ -125,7 +125,7 @@ export default async function DashboardPage() {
       <div className="card p-0">
         <div className="px-6 py-4 border-b border-gray-100 flex justify-between items-center">
           <h2 className="text-lg font-semibold text-gray-900">Actividad Reciente</h2>
-          <Link href="/dashboard/prestamos" className="text-sm text-purple-600 hover:text-purple-700 font-medium transition-colors">
+          <Link href="/dashboard/prestamos" className="text-sm text-brand-600 hover:text-brand-700 font-medium transition-colors">
             Ver todos →
           </Link>
         </div>

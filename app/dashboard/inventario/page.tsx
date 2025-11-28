@@ -1,64 +1,51 @@
-'use client'
+/**
+ * PÁGINA DE INVENTARIO - SERVER COMPONENT
+ * 
+ * ✅ Componente async que hace fetch directo a la BD
+ * ✅ No usa useEffect, useState ni fetch del cliente
+ * ✅ Renderizado en el servidor con datos frescos
+ * ✅ Búsqueda con searchParams
+ */
 
-import { useState, useEffect } from 'react'
 import Link from 'next/link'
-import { useRouter, useSearchParams } from 'next/navigation'
+import { prisma } from '@/lib/prisma'
+import { type SearchParams } from '@/types'
+import FormularioBusqueda from './FormularioBusqueda'
 
-interface Libro {
-  id: string
-  numero: number
-  fechaRegistro: string | null
-  numeroRegistro: string | null
-  titulo: string
-  autor: string | null
-  cantidad: number
-  disponible: number
+// Formatear fecha helper (puro, sin dependencias del cliente)
+function formatearFecha(fecha: Date | string | null): string {
+  if (!fecha) return '-'
+  return new Date(fecha).toLocaleDateString('es-ES', {
+    day: '2-digit',
+    month: 'short',
+    year: 'numeric'
+  })
 }
 
-export default function InventarioPage() {
-  const router = useRouter()
-  const searchParams = useSearchParams()
-  const [libros, setLibros] = useState<Libro[]>([])
-  const [loading, setLoading] = useState(true)
-  const [busquedaGeneral, setBusquedaGeneral] = useState(searchParams.get('q') || '')
+// ==================== SERVER COMPONENT ====================
 
-  useEffect(() => {
-    fetchLibros()
-  }, [searchParams])
+export default async function InventarioPage({
+  searchParams,
+}: {
+  searchParams: SearchParams
+}) {
+  // Construir query de búsqueda
+  const busqueda = searchParams.q || ''
 
-  const fetchLibros = async () => {
-    setLoading(true)
-    try {
-      const params = new URLSearchParams()
-      if (searchParams.get('q')) params.set('q', searchParams.get('q')!)
-
-      const response = await fetch(`/api/libros?${params.toString()}`)
-      if (response.ok) {
-        const data = await response.json()
-        setLibros(data)
+  // Fetch directo a la BD (ejecutado en el servidor)
+  // SQLite no soporta 'insensitive' mode, así que lo removemos
+  const libros = await prisma.libro.findMany({
+    where: busqueda
+      ? {
+        OR: [
+          { titulo: { contains: busqueda } },
+          { autor: { contains: busqueda } },
+          { numeroRegistro: { contains: busqueda } },
+        ],
       }
-    } catch (error) {
-      console.error('Error al cargar libros:', error)
-    } finally {
-      setLoading(false)
-    }
-  }
-
-  const aplicarBusqueda = () => {
-    const params = new URLSearchParams()
-    if (busquedaGeneral) params.set('q', busquedaGeneral)
-    router.push(`/dashboard/inventario?${params.toString()}`)
-  }
-
-  const limpiarBusqueda = () => {
-    setBusquedaGeneral('')
-    router.push('/dashboard/inventario')
-  }
-
-  const formatearFecha = (fecha: string | null) => {
-    if (!fecha) return '-'
-    return new Date(fecha).toLocaleDateString('es-ES', { day: '2-digit', month: 'short', year: 'numeric' })
-  }
+      : {},
+    orderBy: { numero: 'asc' },
+  })
 
   return (
     <div className="space-y-6">
@@ -73,35 +60,11 @@ export default function InventarioPage() {
         </Link>
       </div>
 
-      {/* Búsqueda */}
-      <div className="card">
-        <div className="flex gap-3">
-          <input
-            type="text"
-            value={busquedaGeneral}
-            onChange={(e) => setBusquedaGeneral(e.target.value)}
-            onKeyPress={(e) => e.key === 'Enter' && aplicarBusqueda()}
-            placeholder="Buscar por título, autor o número de registro..."
-            className="flex-1"
-          />
-          <button onClick={aplicarBusqueda} className="btn-primary">
-            Buscar
-          </button>
-          {busquedaGeneral && (
-            <button onClick={limpiarBusqueda} className="btn-secondary">
-              Limpiar
-            </button>
-          )}
-        </div>
-      </div>
+      {/* Búsqueda - Client Component separado */}
+      <FormularioBusqueda valorInicial={busqueda} />
 
       {/* Tabla */}
-      {loading ? (
-        <div className="card text-center py-12">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-purple-600 mx-auto mb-4"></div>
-          <p className="text-gray-500">Cargando libros...</p>
-        </div>
-      ) : libros.length === 0 ? (
+      {libros.length === 0 ? (
         <div className="card text-center py-12">
           <div className="w-16 h-16 bg-gray-100 rounded-full mx-auto mb-4 flex items-center justify-center">
             <svg className="h-8 w-8 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -109,9 +72,9 @@ export default function InventarioPage() {
             </svg>
           </div>
           <p className="text-gray-500 mb-3">
-            {searchParams.get('q') ? 'No se encontraron libros' : 'No hay libros registrados'}
+            {busqueda ? 'No se encontraron libros' : 'No hay libros registrados'}
           </p>
-          {!searchParams.get('q') && (
+          {!busqueda && (
             <Link href="/dashboard/inventario/nuevo" className="btn-primary inline-block">
               Agregar Primer Libro
             </Link>
@@ -153,13 +116,18 @@ export default function InventarioPage() {
                         <span className="text-sm text-gray-600">{formatearFecha(libro.fechaRegistro)}</span>
                       </td>
                       <td className="px-4 py-4 whitespace-nowrap">
-                        <span className={`inline-flex items-center px-2.5 py-1 rounded-full text-xs font-medium ${libro.disponible > 0 ? 'bg-emerald-100 text-emerald-700' : 'bg-rose-100 text-rose-700'
+                        <span className={`inline-flex items-center px-2.5 py-1 rounded-full text-xs font-medium ${libro.disponible > 0
+                            ? 'bg-success-100 text-success-700'
+                            : 'bg-danger-100 text-danger-700'
                           }`}>
                           {libro.disponible} / {libro.cantidad}
                         </span>
                       </td>
                       <td className="px-4 py-4 whitespace-nowrap text-right text-sm font-medium space-x-3">
-                        <Link href={`/dashboard/inventario/${libro.id}/editar`} className="text-purple-600 hover:text-purple-700">
+                        <Link
+                          href={`/dashboard/inventario/${libro.id}/editar`}
+                          className="text-brand-600 hover:text-brand-700"
+                        >
                           Editar
                         </Link>
                       </td>

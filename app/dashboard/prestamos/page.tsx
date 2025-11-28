@@ -33,13 +33,13 @@ export default async function PrestamosPage() {
           <p className="text-sm font-medium text-gray-600 mb-1">Total</p>
           <p className="text-3xl font-bold text-gray-900">{prestamos.length}</p>
         </div>
-        <div className="card bg-amber-50 border-amber-200">
-          <p className="text-sm font-medium text-amber-700 mb-1">Activos</p>
-          <p className="text-3xl font-bold text-amber-700">{prestamosActivos.length}</p>
+        <div className="card bg-warning-50 border-warning-200">
+          <p className="text-sm font-medium text-warning-700 mb-1">Activos</p>
+          <p className="text-3xl font-bold text-warning-700">{prestamosActivos.length}</p>
         </div>
-        <div className="card bg-emerald-50 border-emerald-200">
-          <p className="text-sm font-medium text-emerald-700 mb-1">Devueltos</p>
-          <p className="text-3xl font-bold text-emerald-700">{prestamosDevueltos.length}</p>
+        <div className="card bg-success-50 border-success-200">
+          <p className="text-sm font-medium text-success-700 mb-1">Devueltos</p>
+          <p className="text-3xl font-bold text-success-700">{prestamosDevueltos.length}</p>
         </div>
       </div>
 
