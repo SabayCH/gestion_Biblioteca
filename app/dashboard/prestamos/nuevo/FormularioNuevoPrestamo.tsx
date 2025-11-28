@@ -25,12 +25,10 @@ export default function FormularioNuevoPrestamo({ libros }: FormularioNuevoPrest
     const router = useRouter()
     const [enviando, setEnviando] = useState(false)
 
-    const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
-        e.preventDefault()
+    const handleSubmit = async (formData: FormData) => {
         setEnviando(true)
 
         try {
-            const formData = new FormData(e.currentTarget)
             const resultado = await crearPrestamo(formData)
 
             if (resultado.success) {
@@ -71,7 +69,7 @@ export default function FormularioNuevoPrestamo({ libros }: FormularioNuevoPrest
             </div>
 
             {/* Formulario */}
-            <form onSubmit={handleSubmit} className="card space-y-6">
+            <form action={handleSubmit} className="card space-y-6">
                 {/* Info de libros disponibles */}
                 {libros.length === 0 ? (
                     <div className="bg-warning-50 border border-warning-200 px-4 py-3 rounded-lg">
