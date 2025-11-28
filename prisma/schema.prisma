@@ -27,12 +27,14 @@ model User {
 model Libro {
   id              String    @id @default(cuid())
   numero          Int?      // Número consecutivo (se calcula en la app)
-  fechaRegistro   DateTime? // Fecha de registro del libro (opcional)
-  numeroRegistro  String?   // Número de registro administrativo (opcional)
-  titulo          String    // Título del libro (obligatorio)
-  autor           String?   // Autor del libro (opcional)
-  cantidad        Int       @default(1)
+  sigTop          String?   // SIG. TOP del CSV
+  numeroRegistro  String?   // Código del CSV
+  autor           String?   // NOMBRE AUTOR del CSV
+  titulo          String    // TITULO LIBRO del CSV
+  edicion         String?   // Edición del CSV
+  cantidad        Int       @default(1) // Cant. del CSV
   disponible      Int       @default(1)
+  fechaRegistro   DateTime? // Fecha de registro (opcional)
   createdAt       DateTime  @default(now())
   updatedAt       DateTime  @updatedAt
   

@@ -1,6 +1,8 @@
 import { prisma } from '@/lib/prisma'
 import Link from 'next/link'
 import PrestamoCard from '@/components/PrestamoCard'
+import ExportarExcelButton from '@/components/ExportarExcelButton'
+import ExportarPDFButton from '@/components/ExportarPDFButton'
 
 export default async function PrestamosPage() {
   const prestamos = await prisma.prestamo.findMany({
@@ -22,9 +24,45 @@ export default async function PrestamosPage() {
           <h1 className="text-2xl font-bold text-gray-900">Préstamos</h1>
           <p className="text-gray-600 mt-1">Gestión de préstamos de libros</p>
         </div>
-        <Link href="/dashboard/prestamos/nuevo" className="btn-primary">
-          + Nuevo Préstamo
-        </Link>
+        <div className="flex gap-3">
+          <ExportarExcelButton
+            datos={prestamos.map(p => ({
+              'Libro': p.libro.titulo,
+              'Prestatario': p.nombrePrestatario,
+              'DNI': p.dni,
+              'Fecha Préstamo': new Date(p.fechaPrestamo).toLocaleDateString('es-ES'),
+              'Fecha Límite': new Date(p.fechaLimite).toLocaleDateString('es-ES'),
+              'Fecha Devolución': p.fechaDevolucion ? new Date(p.fechaDevolucion).toLocaleDateString('es-ES') : '-',
+              'Estado': p.estado,
+              'Operador': p.operador.name,
+            }))}
+            nombreArchivo={`Prestamos_${new Date().toLocaleDateString('es-ES').replace(/\//g, '-')}`}
+            nombreHoja="Préstamos"
+          />
+          <ExportarPDFButton
+            datos={prestamos.map(p => ({
+              libro: p.libro.titulo,
+              prestatario: p.nombrePrestatario,
+              dni: p.dni,
+              fechaPrestamo: new Date(p.fechaPrestamo).toLocaleDateString('es-ES'),
+              fechaLimite: new Date(p.fechaLimite).toLocaleDateString('es-ES'),
+              estado: p.estado,
+            }))}
+            titulo="Reporte de Préstamos"
+            nombreArchivo={`Reporte_Prestamos_${new Date().toLocaleDateString('es-ES').replace(/\//g, '-')}`}
+            columnas={[
+              { header: 'Libro', dataKey: 'libro' },
+              { header: 'Prestatario', dataKey: 'prestatario' },
+              { header: 'DNI', dataKey: 'dni' },
+              { header: 'Fecha Préstamo', dataKey: 'fechaPrestamo' },
+              { header: 'Fecha Límite', dataKey: 'fechaLimite' },
+              { header: 'Estado', dataKey: 'estado' },
+            ]}
+          />
+          <Link href="/dashboard/prestamos/nuevo" className="btn-primary">
+            + Nuevo Préstamo
+          </Link>
+        </div>
       </div>
 
       {/* Estadísticas */}

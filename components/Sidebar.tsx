@@ -1,6 +1,7 @@
 'use client'
 
 import { useSession, signOut } from 'next-auth/react'
+import { useState } from 'react'
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
 
@@ -31,6 +32,8 @@ export default function Sidebar() {
         },
     ]
 
+    const [isOpen, setIsOpen] = useState(false)
+
     const isActive = (href: string) => {
         if (href === '/dashboard') {
             return pathname === href
@@ -39,70 +42,102 @@ export default function Sidebar() {
     }
 
     return (
-        <aside className="fixed left-0 top-0 h-screen w-64 bg-white border-r border-gray-200 flex flex-col">
-            {/* Logo */}
-            <div className="p-6 border-b border-gray-200">
-                <Link href="/dashboard" className="flex items-center space-x-3 group">
-                    <div className="w-10 h-10 gradient-purple rounded-xl flex items-center justify-center group-hover:scale-110 transition-transform">
-                        <svg className="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253" />
-                        </svg>
-                    </div>
-                    <div>
-                        <h1 className="text-lg font-bold bg-gradient-to-r from-purple-600 to-indigo-600 bg-clip-text text-transparent">
-                            Biblioteca
-                        </h1>
-                        <p className="text-xs text-gray-500">Sistema de Gestión</p>
-                    </div>
-                </Link>
-            </div>
+        <>
+            {/* Mobile Menu Button */}
+            <button
+                onClick={() => setIsOpen(!isOpen)}
+                className="lg:hidden fixed top-4 left-4 z-50 p-2 rounded-md bg-white shadow-md text-gray-600 hover:text-gray-900"
+            >
+                {isOpen ? (
+                    <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                    </svg>
+                ) : (
+                    <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" />
+                    </svg>
+                )}
+            </button>
 
-            {/* Navigation */}
-            <nav className="flex-1 p-4 space-y-1 overflow-y-auto">
-                {menuItems.map((item) => (
-                    <Link
-                        key={item.href}
-                        href={item.href}
-                        className={`flex items-center space-x-3 px-4 py-3 rounded-lg text-sm font-medium transition-all ${isActive(item.href)
+            {/* Overlay */}
+            {isOpen && (
+                <div
+                    className="fixed inset-0 bg-black/50 z-40 lg:hidden"
+                    onClick={() => setIsOpen(false)}
+                />
+            )}
+
+            {/* Sidebar */}
+            <aside className={`
+                fixed top-0 left-0 z-40 h-screen w-64 bg-white border-r border-gray-200 flex flex-col transition-transform duration-300 ease-in-out
+                ${isOpen ? 'translate-x-0' : '-translate-x-full'}
+                lg:translate-x-0
+            `}>
+                {/* Logo */}
+                <div className="p-6 border-b border-gray-200 flex justify-between items-center">
+                    <Link href="/dashboard" className="flex items-center space-x-3 group">
+                        <div className="w-10 h-10 gradient-purple rounded-xl flex items-center justify-center group-hover:scale-110 transition-transform">
+                            <svg className="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253" />
+                            </svg>
+                        </div>
+                        <div>
+                            <h1 className="text-lg font-bold bg-gradient-to-r from-purple-600 to-indigo-600 bg-clip-text text-transparent">
+                                Biblioteca
+                            </h1>
+                            <p className="text-xs text-gray-500">Sistema de Gestión</p>
+                        </div>
+                    </Link>
+                </div>
+
+                {/* Navigation */}
+                <nav className="flex-1 p-4 space-y-1 overflow-y-auto">
+                    {menuItems.map((item) => (
+                        <Link
+                            key={item.href}
+                            href={item.href}
+                            onClick={() => setIsOpen(false)}
+                            className={`flex items-center space-x-3 px-4 py-3 rounded-lg text-sm font-medium transition-all ${isActive(item.href)
                                 ? 'bg-gradient-to-r from-purple-50 to-indigo-50 text-purple-700 shadow-sm'
                                 : 'text-gray-600 hover:bg-gray-50 hover:text-gray-900'
-                            }`}
-                    >
-                        <svg className="w-5 h-5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d={item.icon} />
-                        </svg>
-                        <span>{item.label}</span>
-                    </Link>
-                ))}
-            </nav>
+                                }`}
+                        >
+                            <svg className="w-5 h-5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d={item.icon} />
+                            </svg>
+                            <span>{item.label}</span>
+                        </Link>
+                    ))}
+                </nav>
 
-            {/* User Section */}
-            <div className="p-4 border-t border-gray-200">
-                <div className="flex items-center space-x-3 mb-3">
-                    <div className="w-10 h-10 bg-gradient-to-br from-purple-500 to-indigo-600 rounded-full flex items-center justify-center flex-shrink-0">
-                        <span className="text-white text-sm font-medium">
-                            {session?.user?.name?.charAt(0).toUpperCase()}
-                        </span>
+                {/* User Section */}
+                <div className="p-4 border-t border-gray-200">
+                    <div className="flex items-center space-x-3 mb-3">
+                        <div className="w-10 h-10 bg-gradient-to-br from-purple-500 to-indigo-600 rounded-full flex items-center justify-center flex-shrink-0">
+                            <span className="text-white text-sm font-medium">
+                                {session?.user?.name?.charAt(0).toUpperCase()}
+                            </span>
+                        </div>
+                        <div className="flex-1 min-w-0">
+                            <p className="text-sm font-medium text-gray-900 truncate">
+                                {session?.user?.name}
+                            </p>
+                            <p className="text-xs text-gray-500 truncate">
+                                {(session?.user as any)?.role === 'ADMIN' ? 'Administrador' : 'Usuario'}
+                            </p>
+                        </div>
                     </div>
-                    <div className="flex-1 min-w-0">
-                        <p className="text-sm font-medium text-gray-900 truncate">
-                            {session?.user?.name}
-                        </p>
-                        <p className="text-xs text-gray-500 truncate">
-                            {(session?.user as any)?.role === 'ADMIN' ? 'Administrador' : 'Usuario'}
-                        </p>
-                    </div>
+                    <button
+                        onClick={() => signOut({ callbackUrl: '/login' })}
+                        className="w-full flex items-center justify-center space-x-2 px-4 py-2 text-sm font-medium text-gray-700 bg-gray-100 rounded-lg hover:bg-gray-200 transition-colors"
+                    >
+                        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
+                        </svg>
+                        <span>Cerrar Sesión</span>
+                    </button>
                 </div>
-                <button
-                    onClick={() => signOut({ callbackUrl: '/login' })}
-                    className="w-full flex items-center justify-center space-x-2 px-4 py-2 text-sm font-medium text-gray-700 bg-gray-100 rounded-lg hover:bg-gray-200 transition-colors"
-                >
-                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
-                    </svg>
-                    <span>Cerrar Sesión</span>
-                </button>
-            </div>
-        </aside>
+            </aside>
+        </>
     )
 }

@@ -1,31 +1,52 @@
+/**
+ * PÁGINA: LISTADO DE USUARIOS
+ * 
+ * ✅ Client Component (necesita useSession para verificar rol)
+ * ✅ Colores semánticos
+ * ✅ Botón eliminar solo para ADMIN
+ */
+
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useEffect, useState } from 'react'
 import Link from 'next/link'
-
-interface Usuario {
-  id: string
-  email: string
-  name: string
-  role: string
-  createdAt: string
-}
+import { useSession } from 'next-auth/react'
+import { obtenerUsuarios } from '@/lib/actions/usuarios'
+import EliminarUsuarioButton from '@/components/EliminarUsuarioButton'
+import type { Usuario } from '@/types'
 
 export default function UsuariosPage() {
-  const [usuarios, setUsuarios] = useState<Usuario[]>([])
+  const { data: session } = useSession()
+  const [usuarios, setUsuarios] = useState<Omit<Usuario, 'password'>[]>([])
   const [loading, setLoading] = useState(true)
 
   useEffect(() => {
-    fetch('/api/usuarios')
-      .then((res) => res.json())
-      .then((data) => {
-        setUsuarios(data)
-        setLoading(false)
-      })
+    const cargarUsuarios = async () => {
+      const data = await obtenerUsuarios()
+      setUsuarios(data)
+      setLoading(false)
+    }
+    cargarUsuarios()
   }, [])
 
-  const admins = usuarios.filter(u => u.role === 'ADMIN')
-  const users = usuarios.filter(u => u.role === 'USER')
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center min-h-screen">
+        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-brand-600"></div>
+      </div>
+    )
+  }
+
+  const admins = usuarios.filter((u) => u.role === 'ADMIN')
+  const users = usuarios.filter((u) => u.role === 'USER')
+
+  const formatearFecha = (fecha: Date) => {
+    return new Date(fecha).toLocaleDateString('es-ES', {
+      day: '2-digit',
+      month: 'short',
+      year: 'numeric',
+    })
+  }
 
   return (
     <div className="space-y-6">
@@ -46,27 +67,27 @@ export default function UsuariosPage() {
           <p className="text-sm font-medium text-gray-600 mb-1">Total</p>
           <p className="text-3xl font-bold text-gray-900">{usuarios.length}</p>
         </div>
-        <div className="card bg-purple-50 border-purple-200">
-          <p className="text-sm font-medium text-purple-700 mb-1">Administradores</p>
-          <p className="text-3xl font-bold text-purple-700">{admins.length}</p>
+        <div className="card bg-brand-50 border-brand-200">
+          <p className="text-sm font-medium text-brand-700 mb-1">Administradores</p>
+          <p className="text-3xl font-bold text-brand-700">{admins.length}</p>
         </div>
-        <div className="card bg-blue-50 border-blue-200">
-          <p className="text-sm font-medium text-blue-700 mb-1">Usuarios</p>
-          <p className="text-3xl font-bold text-blue-700">{users.length}</p>
+        <div className="card bg-info-50 border-info-200">
+          <p className="text-sm font-medium text-info-700 mb-1">Usuarios</p>
+          <p className="text-3xl font-bold text-info-700">{users.length}</p>
         </div>
       </div>
 
       {/* Tabla */}
-      {loading ? (
-        <div className="card text-center py-12">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-purple-600 mx-auto mb-4"></div>
-          <p className="text-gray-500">Cargando usuarios...</p>
-        </div>
-      ) : usuarios.length === 0 ? (
+      {usuarios.length === 0 ? (
         <div className="card text-center py-12">
           <div className="w-16 h-16 bg-gray-100 rounded-full mx-auto mb-4 flex items-center justify-center">
             <svg className="h-8 w-8 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z" />
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth={2}
+                d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z"
+              />
             </svg>
           </div>
           <p className="text-gray-500 mb-3">No hay usuarios registrados</p>
@@ -80,10 +101,18 @@ export default function UsuariosPage() {
             <table className="min-w-full divide-y divide-gray-100">
               <thead className="bg-gray-50">
                 <tr>
-                  <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Usuario</th>
-                  <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Rol</th>
-                  <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Registro</th>
-                  <th className="px-4 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">Acciones</th>
+                  <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    Usuario
+                  </th>
+                  <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    Rol
+                  </th>
+                  <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    Registro
+                  </th>
+                  <th className="px-4 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    Acciones
+                  </th>
                 </tr>
               </thead>
               <tbody className="bg-white divide-y divide-gray-100">
@@ -91,7 +120,7 @@ export default function UsuariosPage() {
                   <tr key={usuario.id} className="hover:bg-gray-50 transition-colors">
                     <td className="px-4 py-4">
                       <div className="flex items-center">
-                        <div className="w-10 h-10 bg-gradient-to-br from-purple-500 to-indigo-600 rounded-full flex items-center justify-center flex-shrink-0">
+                        <div className="w-10 h-10 gradient-brand rounded-full flex items-center justify-center flex-shrink-0">
                           <span className="text-white text-sm font-medium">
                             {usuario.name.charAt(0).toUpperCase()}
                           </span>
@@ -103,18 +132,31 @@ export default function UsuariosPage() {
                       </div>
                     </td>
                     <td className="px-4 py-4 whitespace-nowrap">
-                      <span className={`inline-flex items-center px-2.5 py-1 rounded-full text-xs font-medium ${usuario.role === 'ADMIN' ? 'bg-purple-100 text-purple-700' : 'bg-blue-100 text-blue-700'
-                        }`}>
-                        {usuario.role}
+                      <span
+                        className={`inline-flex items-center px-2.5 py-1 rounded-full text-xs font-medium ${usuario.role === 'ADMIN'
+                          ? 'bg-brand-100 text-brand-700'
+                          : 'bg-info-100 text-info-700'
+                          }`}
+                      >
+                        {usuario.role === 'ADMIN' ? 'Administrador' : 'Usuario'}
                       </span>
                     </td>
                     <td className="px-4 py-4 whitespace-nowrap text-sm text-gray-600">
-                      {new Date(usuario.createdAt).toLocaleDateString('es-ES', { day: '2-digit', month: 'short', year: 'numeric' })}
+                      {formatearFecha(usuario.createdAt)}
                     </td>
-                    <td className="px-4 py-4 whitespace-nowrap text-right text-sm font-medium">
-                      <Link href={`/dashboard/usuarios/${usuario.id}/editar`} className="text-purple-600 hover:text-purple-700">
+                    <td className="px-4 py-4 whitespace-nowrap text-right text-sm font-medium space-x-3">
+                      <Link
+                        href={`/dashboard/usuarios/${usuario.id}/editar`}
+                        className="text-brand-600 hover:text-brand-700 transition-colors"
+                      >
                         Editar
                       </Link>
+                      {session?.user?.role === 'ADMIN' && session?.user?.id !== usuario.id && (
+                        <EliminarUsuarioButton
+                          usuarioId={usuario.id}
+                          usuarioNombre={usuario.name}
+                        />
+                      )}
                     </td>
                   </tr>
                 ))}

@@ -1,43 +1,53 @@
+/**
+ * PÁGINA: CREAR NUEVO USUARIO
+ * 
+ * ✅ Usa Server Actions en lugar de API Routes
+ * ✅ Notificaciones con Sonner (toast)
+ * ✅ Colores semánticos (brand, danger, success)
+ * ✅ Validación de formulario
+ */
+
 'use client'
 
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
+import { crearUsuario } from '@/lib/actions/usuarios'
+import { toast } from '@/lib/toast'
 
 export default function NuevoUsuarioPage() {
   const router = useRouter()
-  const [loading, setLoading] = useState(false)
-  const [error, setError] = useState('')
-  const [formData, setFormData] = useState({
-    name: '',
-    email: '',
-    password: '',
-    role: 'USER',
-  })
+  const [enviando, setEnviando] = useState(false)
 
-  const handleSubmit = async (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault()
-    setError('')
-    setLoading(true)
+    setEnviando(true)
 
     try {
-      const response = await fetch('/api/usuarios', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(formData),
-      })
+      const formData = new FormData(e.currentTarget)
+      const resultado = await crearUsuario(formData)
 
-      if (!response.ok) {
-        const data = await response.json()
-        throw new Error(data.error || 'Error al crear el usuario')
+      if (resultado.success) {
+        toast.success('Usuario creado exitosamente', `Se ha creado el usuario correctamente`)
+        router.push('/dashboard/usuarios')
+        // No necesitas router.refresh() - revalidatePath lo hace automáticamente
+      } else {
+        toast.error(resultado.error || 'Error al crear usuario')
+
+        // Mostrar errores de validación individuales
+        if (resultado.errors) {
+          Object.entries(resultado.errors).forEach(([field, messages]) => {
+            messages.forEach((msg) => {
+              toast.error(`${field}: ${msg}`)
+            })
+          })
+        }
       }
-
-      router.push('/dashboard/usuarios')
-      router.refresh()
-    } catch (err: any) {
-      setError(err.message)
+    } catch (error: any) {
+      console.error('Error inesperado:', error)
+      toast.error('Error inesperado al crear usuario')
     } finally {
-      setLoading(false)
+      setEnviando(false)
     }
   }
 
@@ -46,91 +56,128 @@ export default function NuevoUsuarioPage() {
       <div className="mb-8">
         <Link
           href="/dashboard/usuarios"
-          className="text-indigo-600 hover:text-indigo-700 mb-4 inline-block"
+          className="text-brand-600 hover:text-brand-700 mb-4 inline-flex items-center gap-2 transition-colors"
         >
-          ← Volver a usuarios
+          <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
+          </svg>
+          Volver a usuarios
         </Link>
-        <h1 className="text-3xl font-bold text-gray-900">Nuevo Usuario</h1>
+        <h1 className="text-3xl font-bold text-gray-900 mt-2">Nuevo Usuario</h1>
+        <p className="text-gray-600 mt-1">Crea una nueva cuenta de usuario en el sistema</p>
       </div>
 
-      <form onSubmit={handleSubmit} className="bg-white rounded-lg shadow p-6 space-y-6">
-        {error && (
-          <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded">
-            {error}
-          </div>
-        )}
-
-        <div>
-          <label htmlFor="name" className="block text-sm font-medium text-gray-700 mb-1">
-            Nombre Completo *
+      <form onSubmit={handleSubmit} className="card space-y-6">
+        {/* Nombre */}
+        <div className="input-group">
+          <label htmlFor="name" className="input-label">
+            Nombre Completo <span className="text-danger-500">*</span>
           </label>
           <input
             type="text"
             id="name"
+            name="name"
             required
-            className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-indigo-500 focus:border-indigo-500"
-            value={formData.name}
-            onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+            minLength={3}
+            placeholder="Ej: Juan Pérez"
+            disabled={enviando}
           />
+          <p className="text-xs text-gray-500 mt-1">Mínimo 3 caracteres</p>
         </div>
 
-        <div>
-          <label htmlFor="email" className="block text-sm font-medium text-gray-700 mb-1">
-            Email *
+        {/* Email */}
+        <div className="input-group">
+          <label htmlFor="email" className="input-label">
+            Email <span className="text-danger-500">*</span>
           </label>
           <input
             type="email"
             id="email"
+            name="email"
             required
-            className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-indigo-500 focus:border-indigo-500"
-            value={formData.email}
-            onChange={(e) => setFormData({ ...formData, email: e.target.value })}
+            placeholder="usuario@ejemplo.com"
+            disabled={enviando}
           />
+          <p className="text-xs text-gray-500 mt-1">
+            Este email se usará para iniciar sesión
+          </p>
         </div>
 
-        <div>
-          <label htmlFor="password" className="block text-sm font-medium text-gray-700 mb-1">
-            Contraseña *
+        {/* Contraseña */}
+        <div className="input-group">
+          <label htmlFor="password" className="input-label">
+            Contraseña <span className="text-danger-500">*</span>
           </label>
           <input
             type="password"
             id="password"
+            name="password"
             required
             minLength={6}
-            className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-indigo-500 focus:border-indigo-500"
-            value={formData.password}
-            onChange={(e) => setFormData({ ...formData, password: e.target.value })}
+            placeholder="••••••••"
+            disabled={enviando}
           />
           <p className="text-xs text-gray-500 mt-1">Mínimo 6 caracteres</p>
         </div>
 
-        <div>
-          <label htmlFor="role" className="block text-sm font-medium text-gray-700 mb-1">
-            Rol *
+        {/* Rol */}
+        <div className="input-group">
+          <label htmlFor="role" className="input-label">
+            Rol <span className="text-danger-500">*</span>
           </label>
           <select
             id="role"
+            name="role"
             required
-            className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-indigo-500 focus:border-indigo-500"
-            value={formData.role}
-            onChange={(e) => setFormData({ ...formData, role: e.target.value })}
+            defaultValue="USER"
+            disabled={enviando}
           >
-            <option value="USER">Usuario</option>
+            <option value="USER">Usuario Regular</option>
             <option value="ADMIN">Administrador</option>
           </select>
+          <p className="text-xs text-gray-500 mt-1">
+            Los administradores tienen acceso completo al sistema
+          </p>
         </div>
 
-        <div className="flex gap-4">
+        {/* Info de seguridad */}
+        <div className="bg-info-50 border border-info-200 rounded-lg px-4 py-3">
+          <div className="flex items-start gap-3">
+            <svg className="w-5 h-5 text-info-600 mt-0.5 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
+              <path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clipRule="evenodd" />
+            </svg>
+            <div>
+              <p className="text-sm font-medium text-info-900">Información de seguridad</p>
+              <p className="text-xs text-info-700 mt-1">
+                La contraseña será hasheada y almacenada de forma segura. El usuario recibirá
+                sus credenciales y deberá cambiar su contraseña en el primer inicio de sesión.
+              </p>
+            </div>
+          </div>
+        </div>
+
+        {/* Botones */}
+        <div className="flex gap-4 pt-4 border-t border-gray-200">
           <button
             type="submit"
-            disabled={loading}
-            className="flex-1 bg-indigo-600 text-white py-2 rounded-md hover:bg-indigo-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+            disabled={enviando}
+            className="btn-primary flex-1"
           >
-            {loading ? 'Creando...' : 'Crear Usuario'}
+            {enviando ? (
+              <span className="flex items-center justify-center gap-2">
+                <svg className="animate-spin h-4 w-4" fill="none" viewBox="0 0 24 24">
+                  <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
+                  <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" />
+                </svg>
+                Creando...
+              </span>
+            ) : (
+              'Crear Usuario'
+            )}
           </button>
           <Link
             href="/dashboard/usuarios"
-            className="flex-1 bg-gray-200 text-gray-700 text-center py-2 rounded-md hover:bg-gray-300 transition-colors"
+            className="btn-secondary flex-1 text-center"
           >
             Cancelar
           </Link>
@@ -139,5 +186,3 @@ export default function NuevoUsuarioPage() {
     </div>
   )
 }
-
-

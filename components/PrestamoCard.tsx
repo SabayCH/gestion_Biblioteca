@@ -2,7 +2,8 @@
 
 import { Prisma } from '@prisma/client'
 import { useState } from 'react'
-import { useRouter } from 'next/navigation'
+import { devolverPrestamo } from '@/lib/actions/prestamos'
+import { toast, confirmToast } from '@/lib/toast'
 
 type PrestamoWithRelations = Prisma.PrestamoGetPayload<{
   include: { libro: true; operador: true }
@@ -13,25 +14,30 @@ interface PrestamoCardProps {
 }
 
 export default function PrestamoCard({ prestamo }: PrestamoCardProps) {
-  const router = useRouter()
   const [loading, setLoading] = useState(false)
 
   const handleDevolver = async () => {
-    if (!confirm('¿Marcar este préstamo como devuelto?')) return
+    const confirmed = await confirmToast({
+      title: '¿Marcar como devuelto?',
+      description: `Se marcará el préstamo de "${prestamo.libro.titulo}" como devuelto`,
+      confirmText: 'Sí, devolver',
+      cancelText: 'Cancelar',
+    })
+
+    if (!confirmed) return
 
     setLoading(true)
     try {
-      const response = await fetch(`/api/prestamos/${prestamo.id}/devolver`, {
-        method: 'PUT',
-      })
+      const resultado = await devolverPrestamo({ prestamoId: prestamo.id })
 
-      if (response.ok) {
-        router.refresh()
+      if (resultado.success) {
+        toast.success('Préstamo devuelto correctamente')
       } else {
-        alert('Error al devolver el préstamo')
+        toast.error(resultado.error || 'Error al devolver el préstamo')
       }
     } catch (error) {
-      alert('Error al devolver el préstamo')
+      console.error('Error:', error)
+      toast.error('Error inesperado al devolver')
     } finally {
       setLoading(false)
     }
@@ -58,66 +64,94 @@ export default function PrestamoCard({ prestamo }: PrestamoCardProps) {
   }
 
   return (
-    <div className="card">
-      <div className="flex items-start justify-between mb-4">
-        <div className="flex-1">
-          <h3 className="text-lg font-semibold text-gray-900">{prestamo.libro.titulo}</h3>
+    <div className="card group hover:border-brand-200/50">
+      <div className="flex items-start justify-between mb-5">
+        <div className="flex-1 pr-4">
+          <h3 className="text-lg font-bold text-gray-900 group-hover:text-brand-700 transition-colors">
+            {prestamo.libro.titulo}
+          </h3>
           {prestamo.libro.autor && (
-            <p className="text-sm text-gray-600 mt-0.5">por {prestamo.libro.autor}</p>
+            <p className="text-sm text-gray-500 mt-1 font-medium">
+              {prestamo.libro.autor}
+            </p>
           )}
         </div>
-        <span className={`inline-flex items-center px-2.5 py-1 rounded-full text-xs font-medium ${getEstadoBadge()}`}>
+        <span className={`inline-flex items-center px-3 py-1 rounded-full text-xs font-bold tracking-wide uppercase shadow-sm ${getEstadoBadge()}`}>
           {getEstadoTexto()}
         </span>
       </div>
 
-      <div className="grid grid-cols-2 gap-4 mb-4 pb-4 border-b border-gray-100">
+      <div className="grid grid-cols-2 gap-y-4 gap-x-6 mb-5 pb-5 border-b border-gray-50">
         <div>
-          <p className="text-xs text-gray-500">Prestatario</p>
-          <p className="text-sm font-medium text-gray-900 mt-0.5">{prestamo.nombrePrestatario}</p>
+          <p className="text-xs font-semibold text-gray-400 uppercase tracking-wider mb-1">Prestatario</p>
+          <p className="text-sm font-medium text-gray-900">{prestamo.nombrePrestatario}</p>
         </div>
         <div>
-          <p className="text-xs text-gray-500">DNI</p>
-          <p className="text-sm font-medium text-gray-900 mt-0.5">{prestamo.dni}</p>
+          <p className="text-xs font-semibold text-gray-400 uppercase tracking-wider mb-1">DNI</p>
+          <p className="text-sm font-medium text-gray-900 font-mono text-gray-600">{prestamo.dni}</p>
         </div>
         <div>
-          <p className="text-xs text-gray-500">Fecha Préstamo</p>
-          <p className="text-sm font-medium text-gray-900 mt-0.5">{formatearFecha(prestamo.fechaPrestamo)}</p>
+          <p className="text-xs font-semibold text-gray-400 uppercase tracking-wider mb-1">Fecha Préstamo</p>
+          <p className="text-sm font-medium text-gray-900">{formatearFecha(prestamo.fechaPrestamo)}</p>
         </div>
         <div>
-          <p className="text-xs text-gray-500">Fecha Límite</p>
-          <p className={`text-sm font-medium mt-0.5 ${estaVencido ? 'text-rose-600' : 'text-gray-900'}`}>
+          <p className="text-xs font-semibold text-gray-400 uppercase tracking-wider mb-1">Fecha Límite</p>
+          <p className={`text-sm font-bold ${estaVencido ? 'text-danger-600' : 'text-gray-900'}`}>
             {formatearFecha(fechaLimite)}
           </p>
         </div>
         {prestamo.fechaDevolucion && (
-          <>
-            <div>
-              <p className="text-xs text-gray-500">Devolución</p>
-              <p className="text-sm font-medium text-gray-900 mt-0.5">{formatearFecha(prestamo.fechaDevolucion)}</p>
-            </div>
-          </>
+          <div className="col-span-2">
+            <p className="text-xs font-semibold text-gray-400 uppercase tracking-wider mb-1">Devolución</p>
+            <p className="text-sm font-medium text-success-700">{formatearFecha(prestamo.fechaDevolucion)}</p>
+          </div>
         )}
       </div>
 
       {prestamo.observaciones && (
-        <div className="mb-4">
-          <p className="text-xs text-gray-500 mb-1">Observaciones</p>
-          <p className="text-sm text-gray-700">{prestamo.observaciones}</p>
+        <div className="mb-5 bg-gray-50 rounded-lg p-3 border border-gray-100">
+          <p className="text-xs font-semibold text-gray-500 mb-1 flex items-center gap-1">
+            <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+            </svg>
+            Observaciones
+          </p>
+          <p className="text-sm text-gray-600 italic">{prestamo.observaciones}</p>
         </div>
       )}
 
-      <div className="flex items-center justify-between">
-        <p className="text-xs text-gray-500">
-          Operador: <span className="font-medium text-gray-700">{prestamo.operador.name}</span>
-        </p>
+      <div className="flex items-center justify-between pt-2">
+        <div className="flex items-center gap-2">
+          <div className="w-6 h-6 rounded-full bg-brand-100 flex items-center justify-center text-xs font-bold text-brand-700">
+            {prestamo.operador.name?.charAt(0).toUpperCase()}
+          </div>
+          <p className="text-xs text-gray-500 font-medium">
+            {prestamo.operador.name}
+          </p>
+        </div>
+
         {prestamo.estado === 'ACTIVO' && (
           <button
             onClick={handleDevolver}
             disabled={loading}
-            className="btn-primary"
+            className="btn-primary py-2 px-4 text-sm shadow-brand-500/20"
           >
-            {loading ? 'Procesando...' : 'Marcar Devuelto'}
+            {loading ? (
+              <>
+                <svg className="animate-spin -ml-1 mr-2 h-4 w-4" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                  <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                  <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                </svg>
+                Procesando...
+              </>
+            ) : (
+              <>
+                <svg className="w-4 h-4 mr-1.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                </svg>
+                Marcar Devuelto
+              </>
+            )}
           </button>
         )}
       </div>
