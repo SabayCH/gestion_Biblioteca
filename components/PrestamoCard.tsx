@@ -1,43 +1,46 @@
 'use client'
 
-import { Prisma } from '@prisma/client'
 import { useState } from 'react'
 import { devolverPrestamo } from '@/lib/actions/prestamos'
 import { toast, confirmToast } from '@/lib/toast'
+import { type Prestamo, type Libro, type User } from '@prisma/client'
 
-type PrestamoWithRelations = Prisma.PrestamoGetPayload<{
-  include: { libro: true; operador: true }
-}>
+// Definir el tipo con relaciones
+type PrestamoConRelaciones = Prestamo & {
+  libro: Libro
+  operador: User
+}
 
 interface PrestamoCardProps {
-  prestamo: PrestamoWithRelations
+  prestamo: PrestamoConRelaciones
 }
 
 export default function PrestamoCard({ prestamo }: PrestamoCardProps) {
   const [loading, setLoading] = useState(false)
 
   const handleDevolver = async () => {
-    const confirmed = await confirmToast({
-      title: '¿Marcar como devuelto?',
-      description: `Se marcará el préstamo de "${prestamo.libro.titulo}" como devuelto`,
+    // 1. Confirmación bonita en lugar de window.confirm
+    const confirmado = await confirmToast({
+      title: '¿Confirmar devolución?',
+      description: `Se marcará como devuelto el libro "${prestamo.libro.titulo}" prestado a ${prestamo.nombrePrestatario}.`,
       confirmText: 'Sí, devolver',
-      cancelText: 'Cancelar',
     })
 
-    if (!confirmed) return
+    if (!confirmado) return
 
     setLoading(true)
     try {
+      // 2. Llamada directa a la Server Action
       const resultado = await devolverPrestamo({ prestamoId: prestamo.id })
 
       if (resultado.success) {
-        toast.success('Préstamo devuelto correctamente')
+        toast.success('Libro devuelto correctamente')
+        // La UI se actualiza sola gracias a revalidatePath en la acción
       } else {
-        toast.error(resultado.error || 'Error al devolver el préstamo')
+        toast.error(resultado.error || 'Error al procesar la devolución')
       }
     } catch (error) {
-      console.error('Error:', error)
-      toast.error('Error inesperado al devolver')
+      toast.error('Error inesperado')
     } finally {
       setLoading(false)
     }
@@ -52,9 +55,9 @@ export default function PrestamoCard({ prestamo }: PrestamoCardProps) {
   const estaVencido = fechaLimite < hoy && prestamo.estado === 'ACTIVO'
 
   const getEstadoBadge = () => {
-    if (prestamo.estado === 'DEVUELTO') return 'bg-emerald-100 text-emerald-700'
-    if (estaVencido) return 'bg-rose-100 text-rose-700'
-    return 'bg-amber-100 text-amber-700'
+    if (prestamo.estado === 'DEVUELTO') return 'bg-success-100 text-success-700'
+    if (estaVencido) return 'bg-danger-100 text-danger-700'
+    return 'bg-warning-100 text-warning-700'
   }
 
   const getEstadoTexto = () => {

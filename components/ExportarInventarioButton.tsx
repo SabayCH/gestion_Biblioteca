@@ -10,7 +10,7 @@
 
 import { useState } from 'react'
 import { obtenerLibrosParaExportar } from '@/lib/actions/libros'
-import * as XLSX from 'xlsx'
+import { utils, writeFile } from 'xlsx'
 import { toast } from '@/lib/toast'
 
 interface ExportarInventarioButtonProps {
@@ -27,7 +27,7 @@ export default function ExportarInventarioButton({
     const handleExportar = async () => {
         try {
             setExportando(true)
-            toast.message('Preparando archivo...', 'Esto puede tomar unos segundos')
+            toast.info('Preparando archivo...', 'Esto puede tomar unos segundos')
 
             // 1. Obtener datos del servidor
             const datos = await obtenerLibrosParaExportar(busqueda)
@@ -38,8 +38,8 @@ export default function ExportarInventarioButton({
             }
 
             // 2. Crear libro de Excel
-            const wb = XLSX.utils.book_new()
-            const ws = XLSX.utils.json_to_sheet(datos)
+            const wb = utils.book_new()
+            const ws = utils.json_to_sheet(datos)
 
             // Ajustar ancho de columnas
             const colWidths = [
@@ -54,16 +54,16 @@ export default function ExportarInventarioButton({
             ]
             ws['!cols'] = colWidths
 
-            XLSX.utils.book_append_sheet(wb, ws, 'Inventario')
+            utils.book_append_sheet(wb, ws, 'Inventario')
 
             // 3. Descargar archivo
             const nombreArchivo = `Inventario_Completo_${new Date().toLocaleDateString('es-ES').replace(/\//g, '-')}.xlsx`
-            XLSX.writeFile(wb, nombreArchivo)
+            writeFile(wb, nombreArchivo)
 
             toast.success('Archivo descargado correctamente')
-        } catch (error) {
+        } catch (error: any) {
             console.error('Error al exportar:', error)
-            toast.error('Error al generar el archivo Excel')
+            toast.error('Error al generar el archivo Excel', error.message)
         } finally {
             setExportando(false)
         }
