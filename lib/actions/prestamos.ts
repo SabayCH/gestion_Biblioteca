@@ -22,7 +22,7 @@ import { type ServerActionResponse, type PrestamoConRelaciones } from '@/types'
 // ==================== SCHEMAS DE VALIDACIÓN ====================
 
 const crearPrestamoSchema = z.object({
-    libroId: z.string().min(1, 'El libro es requerido'),
+    libroId: z.array(z.string()).min(1, 'Debes seleccionar al menos un libro'),
     nombrePrestatario: z.string().min(2, 'El nombre debe tener al menos 2 caracteres').trim(),
     dni: z.string().min(5, 'El DNI debe tener al menos 5 caracteres').trim(),
     email: z.string().email('Email inválido').optional().or(z.literal('')),
@@ -35,23 +35,9 @@ const devolverPrestamoSchema = z.object({
     observaciones: z.string().optional(),
 })
 
-// ==================== ACCIONES ====================
-
-/**
- * Crear un nuevo préstamo
- * 
- * Validaciones:
- * - Verifica que el usuario esté autenticado
- * - Valida datos con Zod
- * - Verifica disponibilidad del libro
- * - Verifica que el prestatario no tenga préstamos activos
- * - Crea el préstamo en una transacción atómica
- * - Decrementa la disponibilidad del libro
- * - Registra la acción en auditoría
- */
 export async function crearPrestamo(
     formData: FormData | Record<string, any>
-): Promise<ServerActionResponse<PrestamoConRelaciones>> {
+): Promise<ServerActionResponse<PrestamoConRelaciones[]>> {
     try {
         // 1. Verificar autenticación
         const session = await getServerSession(authOptions)
@@ -63,9 +49,16 @@ export async function crearPrestamo(
         }
 
         // 2. Extraer y parsear datos
-        const rawData = formData instanceof FormData
-            ? Object.fromEntries(formData)
-            : formData
+        let rawData: any
+        if (formData instanceof FormData) {
+            rawData = Object.fromEntries(formData)
+            // Asegurar que libroId sea un array
+            const librosIds = formData.getAll('libroId')
+            // Si solo hay uno, getAll devuelve array de 1. Si no hay, array vacío.
+            rawData.libroId = librosIds.length > 0 ? librosIds : []
+        } else {
+            rawData = formData
+        }
 
         const validacion = crearPrestamoSchema.safeParse(rawData)
 
@@ -77,79 +70,89 @@ export async function crearPrestamo(
             }
         }
 
-        const { libroId, nombrePrestatario, dni, email, fechaLimite, observaciones } = validacion.data
+        const { libroId: librosIds, nombrePrestatario, dni, email, fechaLimite, observaciones } = validacion.data
 
-        // 3. Verificar disponibilidad del libro
-        const libro = await prisma.libro.findUnique({
-            where: { id: libroId },
+        // 3. Verificar disponibilidad de TODOS los libros
+        const libros = await prisma.libro.findMany({
+            where: { id: { in: librosIds } },
         })
 
-        if (!libro) {
+        if (libros.length !== librosIds.length) {
             return {
                 success: false,
-                error: 'Libro no encontrado',
+                error: 'Uno o más libros seleccionados no existen',
             }
         }
 
-        if (libro.disponible <= 0) {
-            return {
-                success: false,
-                error: `No hay ejemplares disponibles de "${libro.titulo}"`,
+        for (const libro of libros) {
+            if (libro.disponible <= 0) {
+                return {
+                    success: false,
+                    error: `No hay ejemplares disponibles de "${libro.titulo}"`,
+                }
             }
         }
 
-        // 4. Verificar que el prestatario no tenga préstamos activos (validación de morosos)
-        const prestamoExistente = await prisma.prestamo.findFirst({
+        // 4. Verificar límite de préstamos por usuario
+        const prestamosActivos = await prisma.prestamo.count({
             where: {
                 dni: dni,
                 estado: 'ACTIVO',
             },
         })
 
-        if (prestamoExistente) {
+        if (prestamosActivos + librosIds.length > 3) {
             return {
                 success: false,
-                error: `El usuario con DNI ${dni} ya tiene un libro pendiente de devolución`,
+                error: `El usuario ya tiene ${prestamosActivos} préstamos activos. No puede llevar ${librosIds.length} más (Máximo 3).`,
             }
         }
 
-        // 5. Crear préstamo en transacción atómica
-        const prestamo = await prisma.$transaction(async (tx) => {
-            // Crear préstamo
-            const nuevoPrestamo = await tx.prestamo.create({
-                data: {
-                    libroId,
-                    usuarioId: session.user.id,
-                    nombrePrestatario,
-                    dni,
-                    email: email || null,
-                    fechaLimite: new Date(fechaLimite),
-                    observaciones: observaciones || null,
-                },
-                include: {
-                    libro: true,
-                    operador: true,
-                },
-            })
+        // 5. Crear préstamos en transacción atómica
+        const nuevosPrestamos = await prisma.$transaction(async (tx) => {
+            const resultados = []
 
-            // Decrementar disponibilidad
-            await tx.libro.update({
-                where: { id: libroId },
-                data: { disponible: { decrement: 1 } },
-            })
+            for (const idLibro of librosIds) {
+                const libro = libros.find(l => l.id === idLibro)!
 
-            // Registrar en auditoría
-            await tx.auditLog.create({
-                data: {
-                    action: 'CREAR',
-                    entity: 'Prestamo',
-                    entityId: nuevoPrestamo.id,
-                    usuarioId: session.user.id,
-                    detalles: `Préstamo creado: ${libro.titulo} para ${nombrePrestatario} (DNI: ${dni})`,
-                },
-            })
+                // Crear préstamo
+                const nuevoPrestamo = await tx.prestamo.create({
+                    data: {
+                        libroId: idLibro,
+                        usuarioId: session.user.id,
+                        nombrePrestatario,
+                        dni,
+                        email: email || null,
+                        fechaLimite: new Date(fechaLimite),
+                        observaciones: observaciones || null,
+                    },
+                    include: {
+                        libro: true,
+                        operador: true,
+                    },
+                })
 
-            return nuevoPrestamo
+                // Decrementar disponibilidad
+                await tx.libro.update({
+                    where: { id: idLibro },
+                    data: { disponible: { decrement: 1 } },
+                })
+
+                // Registrar en auditoría
+                await tx.auditLog.create({
+                    data: {
+                        action: 'CREAR',
+                        entity: 'Prestamo',
+                        entityId: nuevoPrestamo.id,
+                        usuarioId: session.user.id,
+                        detalles: `Préstamo creado: ${libro.titulo} para ${nombrePrestatario} (DNI: ${dni})`,
+                    },
+                })
+
+                resultados.push(nuevoPrestamo)
+            }
+
+            return resultados
         })
 
         // 6. Revalidar rutas afectadas
@@ -158,7 +161,7 @@ export async function crearPrestamo(
 
         return {
             success: true,
-            data: prestamo,
+            data: nuevosPrestamos,
         }
     } catch (error: any) {
         console.error('Error al crear préstamo:', error)

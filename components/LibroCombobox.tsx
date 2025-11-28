@@ -14,12 +14,13 @@ import { type Libro } from '@/types'
 
 interface LibroComboboxProps {
     libros: Libro[]
-    name: string
+    name?: string
     disabled?: boolean
     required?: boolean
+    onSelect?: (libro: Libro) => void
 }
 
-export default function LibroCombobox({ libros, name, disabled, required }: LibroComboboxProps) {
+export default function LibroCombobox({ libros, name, disabled, required, onSelect }: LibroComboboxProps) {
     const [busqueda, setBusqueda] = useState('')
     const [isOpen, setIsOpen] = useState(false)
     const [libroSeleccionado, setLibroSeleccionado] = useState<Libro | null>(null)
@@ -49,6 +50,13 @@ export default function LibroCombobox({ libros, name, disabled, required }: Libr
     }, [])
 
     const handleSeleccionar = (libro: Libro) => {
+        if (onSelect) {
+            onSelect(libro)
+            setBusqueda('')
+            setIsOpen(false)
+            return
+        }
+
         setLibroSeleccionado(libro)
         setBusqueda('')
         setIsOpen(false)

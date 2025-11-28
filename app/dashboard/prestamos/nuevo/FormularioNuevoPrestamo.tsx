@@ -24,15 +24,39 @@ interface FormularioNuevoPrestamoProps {
 export default function FormularioNuevoPrestamo({ libros }: FormularioNuevoPrestamoProps) {
     const router = useRouter()
     const [enviando, setEnviando] = useState(false)
+    const [librosSeleccionados, setLibrosSeleccionados] = useState<Libro[]>([])
+
+    const handleAgregarLibro = (libro: Libro) => {
+        if (librosSeleccionados.length >= 3) {
+            toast.warning('Máximo 3 libros por préstamo')
+            return
+        }
+        if (librosSeleccionados.find(l => l.id === libro.id)) {
+            toast.warning('Este libro ya está seleccionado')
+            return
+        }
+        setLibrosSeleccionados([...librosSeleccionados, libro])
+    }
+
+    const handleRemoverLibro = (libroId: string) => {
+        setLibrosSeleccionados(librosSeleccionados.filter(l => l.id !== libroId))
+    }
 
     const handleSubmit = async (formData: FormData) => {
+        if (librosSeleccionados.length === 0) {
+            toast.error('Debes seleccionar al menos un libro')
+            return
+        }
+
         setEnviando(true)
 
         try {
+            // El formData ya incluye 'libroId' múltiples veces gracias a los inputs ocultos
             const resultado = await crearPrestamo(formData)
 
             if (resultado.success) {
-                toast.success('Préstamo creado exitosamente', 'El libro ha sido prestado correctamente')
+                const count = Array.isArray(resultado.data) ? resultado.data.length : 1
+                toast.success('Préstamo creado exitosamente', `Se han prestado ${count} libro(s) correctamente`)
                 router.push('/dashboard/prestamos')
             } else {
                 toast.error(resultado.error || 'Error al crear préstamo')
@@ -102,17 +126,56 @@ export default function FormularioNuevoPrestamo({ libros }: FormularioNuevoPrest
                     </div>
                 )}
 
-                {/* Libro */}
+                {/* Libros Seleccionados */}
                 <div className="input-group">
-                    <label htmlFor="libroId" className="input-label">
-                        Libro <span className="text-danger-500">*</span>
+                    <label className="input-label">
+                        Libros a Prestar ({librosSeleccionados.length}/3) <span className="text-danger-500">*</span>
                     </label>
-                    <LibroCombobox
-                        libros={libros}
-                        name="libroId"
-                        disabled={enviando || libros.length === 0}
-                        required
-                    />
+
+                    {/* Lista de libros seleccionados */}
+                    {librosSeleccionados.length > 0 && (
+                        <div className="mb-3 space-y-2">
+                            {librosSeleccionados.map((libro) => (
+                                <div key={libro.id} className="flex items-center justify-between p-3 border border-brand-200 bg-brand-50 rounded-lg">
+                                    <div className="flex-1 min-w-0 mr-2">
+                                        <p className="text-sm font-medium text-brand-900 truncate">{libro.titulo}</p>
+                                        <p className="text-xs text-brand-600 truncate">
+                                            {libro.autor || 'Sin autor'} • Código: {libro.numeroRegistro || '-'}
+                                        </p>
+                                        {/* Input oculto para enviar este libro */}
+                                        <input type="hidden" name="libroId" value={libro.id} />
+                                    </div>
+                                    <button
+                                        type="button"
+                                        onClick={() => handleRemoverLibro(libro.id)}
+                                        disabled={enviando}
+                                        className="text-brand-400 hover:text-brand-600 p-1 rounded-full hover:bg-brand-100 transition-colors"
+                                    >
+                                        <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                                        </svg>
+                                    </button>
+                                </div>
+                            ))}
+                        </div>
+                    )}
+
+                    {/* Selector para agregar más */}
+                    {librosSeleccionados.length < 3 ? (
+                        <LibroCombobox
+                            libros={libros.filter(l => !librosSeleccionados.find(sel => sel.id === l.id))}
+                            disabled={enviando || libros.length === 0}
+                            onSelect={handleAgregarLibro}
+                        />
+                    ) : (
+                        <p className="text-sm text-warning-600 font-medium">
+                            Has alcanzado el límite de 3 libros por préstamo.
+                        </p>
+                    )}
+
+                    {librosSeleccionados.length === 0 && (
+                        <p className="text-xs text-danger-500 mt-1">Debes seleccionar al menos un libro</p>
+                    )}
                 </div>
 
                 {/* Nombre */}
@@ -172,11 +235,11 @@ export default function FormularioNuevoPrestamo({ libros }: FormularioNuevoPrest
                         id="fechaLimite"
                         name="fechaLimite"
                         required
-                        defaultValue={format(addDays(new Date(), 15), 'yyyy-MM-dd')}
+                        defaultValue={format(addDays(new Date(), 3), 'yyyy-MM-dd')}
                         min={format(new Date(), 'yyyy-MM-dd')}
                         disabled={enviando}
                     />
-                    <p className="text-xs text-gray-500 mt-1">Por defecto: 15 días desde hoy</p>
+                    <p className="text-xs text-gray-500 mt-1">Por defecto: 3 días desde hoy</p>
                 </div>
 
                 {/* Observaciones */}
