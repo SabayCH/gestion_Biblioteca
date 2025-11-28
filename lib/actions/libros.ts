@@ -341,11 +341,46 @@ export async function obtenerLibroPorId(id: string): Promise<Libro | null> {
 }
 
 /**
+ * Obtener libros para exportar a Excel
+ * 
+ * - Devuelve datos planos y formateados
+ */
+export async function obtenerLibrosParaExportar(busqueda?: string) {
+    const whereClause: any = {}
+
+    if (busqueda) {
+        whereClause.OR = [
+            { titulo: { contains: busqueda } },
+            { autor: { contains: busqueda } },
+            { numeroRegistro: { contains: busqueda } },
+            { sigTop: { contains: busqueda } },
+        ]
+    }
+
+    const libros = await prisma.libro.findMany({
+        where: whereClause,
+        orderBy: { numero: 'asc' },
+    })
+
+    // Formatear para Excel
+    return libros.map(libro => ({
+        'SIG. TOP': libro.sigTop || '',
+        'Código': libro.numeroRegistro || '',
+        'Autor': libro.autor || '',
+        'Título': libro.titulo,
+        'Edición': libro.edicion || '',
+        'Cantidad': libro.cantidad,
+        'Disponibles': libro.disponible,
+        'Fecha Registro': libro.fechaRegistro ? libro.fechaRegistro.toLocaleDateString('es-ES') : '',
+    }))
+}
+
+/**
  * Importar libros desde CSV
  * 
- * Lee el archivo Data.csv y crea los libros en la BD
+ * - Lee el archivo subido y crea los libros en la BD
  */
-export async function importarLibrosCSV(): Promise<ServerActionResponse<{ importados: number }>> {
+export async function importarLibrosCSV(formData: FormData): Promise<ServerActionResponse<{ importados: number }>> {
     try {
         // 1. Verificar autenticación
         const session = await getServerSession(authOptions)
@@ -356,12 +391,16 @@ export async function importarLibrosCSV(): Promise<ServerActionResponse<{ import
             }
         }
 
-        // 2. Leer archivo CSV
-        const fs = await import('fs/promises')
-        const path = await import('path')
+        // 2. Obtener archivo
+        const file = formData.get('file') as File
+        if (!file) {
+            return {
+                success: false,
+                error: 'No se ha proporcionado ningún archivo',
+            }
+        }
 
-        const csvPath = path.join(process.cwd(), 'Data.csv')
-        const csvContent = await fs.readFile(csvPath, 'utf-8')
+        const csvContent = await file.text()
 
         // 3. Parsear CSV (saltando header)
         const lines = csvContent.split('\n').slice(1) // Saltar header
@@ -419,7 +458,7 @@ export async function importarLibrosCSV(): Promise<ServerActionResponse<{ import
             const edicion = valores[4] || null
             const cantidad = parseInt(valores[5]) || 1
 
-            console.log(`Importando: SIG.TOP="${sigTop}", Código="${codigo}", Título="${titulo}"`)
+            // console.log(`Importando: SIG.TOP="${sigTop}", Código="${codigo}", Título="${titulo}"`)
 
             try {
                 await prisma.libro.create({

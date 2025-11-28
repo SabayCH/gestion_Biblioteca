@@ -1,7 +1,7 @@
 /**
  * PÁGINA: IMPORTAR LIBROS DESDE CSV
  * 
- * Importa el archivo Data.csv con el inventario completo de libros
+ * Importa el archivo CSV con el inventario completo de libros
  * ✅ Server Action para procesamiento
  * ✅ Validación de datos
  * ✅ Contador de progreso
@@ -16,15 +16,23 @@ import { importarLibrosCSV } from '@/lib/actions/libros'
 
 export default function ImportarLibrosPage() {
     const [importando, setImportando] = useState(false)
-    const [progreso, setProgreso] = useState({ procesados: 0, total: 0 })
+    const [archivo, setArchivo] = useState<File | null>(null)
     const router = useRouter()
 
     const handleImportar = async () => {
+        if (!archivo) {
+            toast.error('Por favor selecciona un archivo CSV')
+            return
+        }
+
         try {
             setImportando(true)
 
+            const formData = new FormData()
+            formData.append('file', archivo)
+
             // Procesar el archivo CSV
-            const resultado = await importarLibrosCSV()
+            const resultado = await importarLibrosCSV(formData)
 
             if (resultado.success) {
                 toast.success(`Se importaron ${resultado.data?.importados} libros correctamente`)
@@ -44,7 +52,7 @@ export default function ImportarLibrosPage() {
         <div className="space-y-6">
             <div>
                 <h1 className="text-2xl font-bold text-gray-900">Importar Inventario</h1>
-                <p className="text-gray-600 mt-1">Importar libros desde Data.csv</p>
+                <p className="text-gray-600 mt-1">Importar libros desde archivo CSV</p>
             </div>
 
             <div className="card">
@@ -52,31 +60,37 @@ export default function ImportarLibrosPage() {
 
                 <div className="mb-6">
                     <p className="text-sm text-gray-600 mb-2">
-                        Esta función importará todos los libros del archivo <code className="bg-gray-100 px-2 py-1 rounded">Data.csv</code>
+                        Selecciona un archivo CSV con el formato correcto para importar los libros.
                     </p>
-                    <p className="text-sm text-yellow-600">
+                    <p className="text-sm text-yellow-600 mb-4">
                         ⚠️ Esta operación puede tardar varios minutos dependiendo de la cantidad de libros
                     </p>
-                </div>
 
-                {progreso.total > 0 && (
-                    <div className="mb-6">
-                        <div className="w-full bg-gray-200 rounded-full h-4">
-                            <div
-                                className="bg-brand-600 h-4 rounded-full transition-all"
-                                style={{ width: `${(progreso.procesados / progreso.total) * 100}%` }}
-                            ></div>
-                        </div>
-                        <p className="text-sm text-gray-600 mt-2">
-                            {progreso.procesados} de {progreso.total} libros procesados
-                        </p>
+                    <div className="border-2 border-dashed border-gray-300 rounded-lg p-6 text-center hover:bg-gray-50 transition-colors">
+                        <input
+                            type="file"
+                            accept=".csv"
+                            onChange={(e) => setArchivo(e.target.files?.[0] || null)}
+                            className="block w-full text-sm text-gray-500
+                                file:mr-4 file:py-2 file:px-4
+                                file:rounded-full file:border-0
+                                file:text-sm file:font-semibold
+                                file:bg-brand-50 file:text-brand-700
+                                hover:file:bg-brand-100
+                            "
+                        />
+                        {archivo && (
+                            <p className="mt-2 text-sm text-green-600 font-medium">
+                                Archivo seleccionado: {archivo.name}
+                            </p>
+                        )}
                     </div>
-                )}
+                </div>
 
                 <button
                     onClick={handleImportar}
-                    disabled={importando}
-                    className="btn-primary"
+                    disabled={importando || !archivo}
+                    className="btn-primary w-full sm:w-auto"
                 >
                     {importando ? (
                         <>
