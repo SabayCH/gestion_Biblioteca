@@ -88,13 +88,16 @@ La aplicación estará disponible en: `http://localhost:3000`
     npm start
     ```
 
-## 7. Crear un Acceso Directo en el Escritorio
+## 7. Crear un Acceso Directo (Alternativa Manual)
 
-**IMPORTANTE**: No muevas el archivo `Iniciar_Sistema.bat` fuera de la carpeta del proyecto, o dejará de funcionar.
+Si el archivo `.bat` no te funciona o prefieres hacerlo manualmente:
 
-Para tenerlo en el Escritorio:
-1.  Ve a la carpeta del proyecto.
-2.  Haz clic derecho sobre el archivo `Iniciar_Sistema.bat`.
-3.  Selecciona **"Enviar a"** > **"Escritorio (crear acceso directo)"**.
+1.  Haz clic derecho en el Escritorio > **Nuevo** > **Acceso directo**.
+2.  En "Escriba la ubicación del elemento", pega lo siguiente (reemplaza `RUTA_DE_TU_CARPETA` por la ruta real):
+    ```cmd
+    cmd /k "cd /d RUTA_DE_TU_CARPETA && npm start"
+    ```
+    *Ejemplo: `cmd /k "cd /d C:\Users\Admin\Desktop\gestion_Biblioteca && npm start"`*
+3.  Haz clic en **Siguiente**, ponle de nombre "Sistema Biblioteca" y finalizar.
 
-¡Listo! Ahora tendrás un icono en el escritorio para abrir el sistema sin romper nada.
+**Nota**: Para que esto funcione, ya debes haber ejecutado `npm run build` al menos una vez en la terminal.

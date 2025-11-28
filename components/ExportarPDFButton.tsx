@@ -40,36 +40,71 @@ export default function ExportarPDFButton<T extends Record<string, any>>({
                 return
             }
 
-            // Crear documento PDF
-            const doc = new jsPDF()
+            // Crear documento PDF en horizontal (landscape) para más espacio
+            const doc = new jsPDF({ orientation: 'landscape' })
+
+            // Título
+            doc.setFontSize(18)
+            doc.setTextColor(40, 40, 40)
+            doc.text(titulo, 14, 20)
+
+            // Fecha
+            doc.setFontSize(10)
+            doc.setTextColor(100, 100, 100)
+            doc.text(`Generado: ${new Date().toLocaleDateString('es-ES')}`, 14, 28)
+
+            // Configuración de tabla manual
+            const startX = 14
+            let y = 40
+            const pageWidth = doc.internal.pageSize.width - 28 // Margen de 14 a cada lado
+            const colWidth = pageWidth / columnas.length // Ancho equitativo
 
             // Headers
-            let y = 38
+            doc.setFontSize(10)
             doc.setFont('helvetica', 'bold')
+            doc.setTextColor(0, 0, 0)
+
             columnas.forEach((col, i) => {
-                doc.text(col.header, 14 + (i * 35), y)
+                doc.text(col.header, startX + (i * colWidth), y)
             })
 
             // Línea separadora
-            y += 2
-            doc.line(14, y, 195, y)
-            y += 6
+            y += 3
+            doc.setDrawColor(200, 200, 200)
+            doc.line(startX, y, startX + pageWidth, y)
+            y += 8
 
             // Datos
             doc.setFont('helvetica', 'normal')
+            doc.setFontSize(9)
+
             datos.forEach((fila: any) => {
-                if (y > 280) { // Nueva página si es necesario
+                if (y > 190) { // Nueva página (ajustado para landscape)
                     doc.addPage()
                     y = 20
+                    // Repetir headers en nueva página
+                    doc.setFont('helvetica', 'bold')
+                    columnas.forEach((col, i) => {
+                        doc.text(col.header, startX + (i * colWidth), y)
+                    })
+                    y += 8
+                    doc.setFont('helvetica', 'normal')
                 }
 
                 columnas.forEach((col, i) => {
-                    const valor = String(fila[col.dataKey] ?? '-')
-                    const texto = valor.length > 20 ? valor.substring(0, 17) + '...' : valor
-                    doc.text(texto, 14 + (i * 35), y)
+                    let valor = String(fila[col.dataKey] ?? '-')
+                    // Truncar texto si es muy largo para que no se monte
+                    const maxChars = Math.floor(colWidth / 2.5)
+                    if (valor.length > maxChars) {
+                        valor = valor.substring(0, maxChars - 3) + '...'
+                    }
+                    doc.text(valor, startX + (i * colWidth), y)
                 })
 
-                y += 6
+                y += 7
+                // Línea suave entre filas
+                doc.setDrawColor(240, 240, 240)
+                doc.line(startX, y - 4, startX + pageWidth, y - 4)
             })
 
             // Guardar PDF
