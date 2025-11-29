@@ -3,6 +3,7 @@ import Link from 'next/link'
 import PrestamoCard from '@/components/PrestamoCard'
 import ExportarExcelButton from '@/components/ExportarExcelButton'
 import ExportarPDFButton from '@/components/ExportarPDFButton'
+import ReportePrestamos from '@/components/ReportePrestamos'
 
 export default async function PrestamosPage() {
   const prestamos = await prisma.prestamo.findMany({
@@ -101,6 +102,12 @@ export default async function PrestamosPage() {
           ))}
         </div>
       )}
+
+      {/* Sección de Reportes Avanzados */}
+      <div className="mt-8 border-t pt-8">
+        <h2 className="text-xl font-bold text-gray-900 mb-4">Reportes Avanzados</h2>
+        <ReportePrestamos />
+      </div>
     </div>
   )
 }
