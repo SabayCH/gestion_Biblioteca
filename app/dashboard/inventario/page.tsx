@@ -115,15 +115,15 @@ export default async function InventarioPage({
                 {libros.map((libro) => (
                   <tr key={libro.id} className="hover:bg-gray-50/80 transition-colors">
                     <td className="td-base text-gray-600">{libro.sigTop || '-'}</td>
-                    <td className="td-base font-medium text-gray-900">{libro.numeroRegistro || '-'}</td>
+                    <td className="td-base font-medium text-gray-900 max-w-[150px] truncate" title={libro.numeroRegistro || ''}>{libro.numeroRegistro || '-'}</td>
                     <td className="td-base text-gray-600 max-w-[200px] truncate" title={libro.autor || ''}>{libro.autor || '-'}</td>
                     <td className="td-base font-medium text-gray-900 max-w-[300px] truncate" title={libro.titulo}>{libro.titulo}</td>
                     <td className="td-base text-gray-600">{libro.edicion || '-'}</td>
                     <td className="td-base text-center font-medium text-gray-900">{libro.cantidad}</td>
                     <td className="td-base text-center">
                       <span className={`inline-flex items-center px-2.5 py-1 rounded-full text-xs font-medium ${libro.disponible > 0
-                          ? 'bg-success-100 text-success-700'
-                          : 'bg-danger-100 text-danger-700'
+                        ? 'bg-success-100 text-success-700'
+                        : 'bg-danger-100 text-danger-700'
                         }`}>
                         {libro.disponible}
                       </span>
@@ -177,8 +177,8 @@ export default async function InventarioPage({
                         key={pageNum}
                         href={`/dashboard/inventario?${busqueda ? `q=${busqueda}&` : ''}page=${pageNum}&limit=${limite}`}
                         className={`w-9 h-9 flex items-center justify-center rounded-lg text-sm font-medium transition-colors ${pageNum === paginaActual
-                            ? 'bg-brand-600 text-white shadow-md shadow-brand-500/30'
-                            : 'bg-gray-50 text-gray-700 hover:bg-gray-100'
+                          ? 'bg-brand-600 text-white shadow-md shadow-brand-500/30'
+                          : 'bg-gray-50 text-gray-700 hover:bg-gray-100'
                           }`}
                       >
                         {pageNum}
