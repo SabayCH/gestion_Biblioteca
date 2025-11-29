@@ -306,3 +306,121 @@ export async function obtenerUsuarios(): Promise<Omit<Usuario, 'password'>[]> {
 
     return usuarios
 }
+
+/**
+ * Obtener un usuario por ID (sin contraseña)
+ */
+export async function obtenerUsuarioPorId(id: string): Promise<Omit<Usuario, 'password'> | null> {
+    const usuario = await prisma.user.findUnique({
+        where: { id },
+        select: {
+            id: true,
+            email: true,
+            name: true,
+            role: true,
+            createdAt: true,
+            updatedAt: true,
+            prestamosOperador: false,
+            auditLogs: false,
+            password: false,
+        },
+    })
+
+    return usuario
+}
+
+const actualizarUsuarioSchema = z.object({
+    id: z.string(),
+    name: z.string().min(3, 'El nombre debe tener al menos 3 caracteres').trim(),
+    email: z.string().email('Email inválido').toLowerCase().trim(),
+    password: z.string().optional(),
+    role: z.enum(['ADMIN', 'USER']).optional(),
+})
+
+/**
+ * Actualizar un usuario
+ */
+export async function actualizarUsuario(
+    formData: FormData | Record<string, any>
+): Promise<ServerActionResponse<Usuario>> {
+    try {
+        const session = await getServerSession(authOptions)
+        if (!session?.user?.id) {
+            return { success: false, error: 'No autorizado' }
+        }
+
+        const rawData = formData instanceof FormData
+            ? Object.fromEntries(formData)
+            : formData
+
+        const validacion = actualizarUsuarioSchema.safeParse(rawData)
+
+        if (!validacion.success) {
+            return {
+                success: false,
+                error: 'Datos inválidos',
+                errors: validacion.error.flatten().fieldErrors,
+            }
+        }
+
+        const { id, name, email, password, role } = validacion.data
+
+        // Verificar permisos: Admin o el mismo usuario
+        const isAdmin = session.user.role === 'ADMIN'
+        const isSelf = session.user.id === id
+
+        if (!isAdmin && !isSelf) {
+            return { success: false, error: 'No tienes permisos para editar este usuario' }
+        }
+
+        // Verificar si el email ya existe en otro usuario
+        const existente = await prisma.user.findFirst({
+            where: {
+                email,
+                NOT: { id }
+            }
+        })
+
+        if (existente) {
+            return { success: false, error: 'El email ya está en uso por otro usuario' }
+        }
+
+        // Preparar datos de actualización
+        const updateData: any = { name, email }
+
+        // Solo actualizar password si se proporciona y es válido
+        if (password && password.length >= 6) {
+            updateData.password = await bcrypt.hash(password, 10)
+        }
+
+        // Solo admin puede cambiar rol
+        if (isAdmin && role) {
+            updateData.role = role
+        }
+
+        const usuario = await prisma.user.update({
+            where: { id },
+            data: updateData,
+        })
+
+        // Auditoría
+        await prisma.auditLog.create({
+            data: {
+                action: 'ACTUALIZAR',
+                entity: 'User',
+                entityId: id,
+                usuarioId: session.user.id,
+                detalles: `Usuario actualizado: ${email}`,
+            },
+        })
+
+        revalidatePath('/dashboard/usuarios')
+
+        const { password: _, ...usuarioSinPassword } = usuario
+        return { success: true, data: usuarioSinPassword as Usuario }
+
+    } catch (error: any) {
+        console.error('Error al actualizar usuario:', error)
+        return { success: false, error: error.message || 'Error al actualizar usuario' }
+    }
+}

@@ -5,73 +5,68 @@ Sistema moderno de gestión de biblioteca desarrollado con Next.js 14, TypeScrip
 ## ✨ Características
 
 - 🔐 **Autenticación de usuarios** con roles (Admin/Usuario)
-- 📖 **Gestión de inventario** de libros
-- 📋 **Sistema de préstamos** con seguimiento de fechas
+- 📖 **Gestión de inventario** de libros con paginación y búsqueda
+- 📋 **Sistema de préstamos** con seguimiento de fechas y estados
 - 👥 **Administración de usuarios**
 - 📊 **Dashboard con estadísticas** en tiempo real
-- 🔍 **Búsqueda y filtrado** avanzado
+- � **Importación y Exportación** de datos (Excel y PDF)
+- 📅 **Reportes Avanzados** por rango de fechas
+- �🔍 **Búsqueda y filtrado** avanzado
 - 📝 **Registro de auditoría** de acciones
 
-## 🚀 Inicio Rápido
+## 🚀 Inicio Rápido (Windows)
 
-### Requisitos Previos
+Hemos simplificado la instalación con scripts automáticos.
 
-- Node.js 18+ instalado
-- npm o pnpm
+### 1. Instalación Inicial
+Si es la primera vez que descargas el proyecto en esta PC:
+1.  Ejecuta el archivo `Instalar_Inicial.bat`.
+2.  Este script instalará las dependencias, configurará la base de datos y creará el usuario administrador.
 
-### Instalación
+### 2. Iniciar el Sistema
+Para usar el sistema diariamente:
+1.  Ejecuta el archivo `Iniciar_Sistema.bat`.
+2.  El sistema verificará si necesita construirse y abrirá automáticamente el navegador.
 
-1. **Clonar el repositorio**
-```bash
-git clone <repo-url>
-cd gestorDocumentos
-```
+---
 
-2. **Instalar dependencias**
+## ⚙️ Instalación Manual (Desarrolladores)
+
+Si prefieres usar la terminal:
+
+1. **Instalar dependencias**
 ```bash
 npm install
 ```
 
-3. **Configurar variables de entorno**
+2. **Configurar base de datos**
 ```bash
-cp .env.example .env
+npx prisma migrate deploy
+npx prisma db seed
 ```
 
-4. **Inicializar la base de datos**
+3. **Construir y ejecutar**
 ```bash
-npm run db:push
-npm run db:seed
+npm run build
+npm start
 ```
 
-5. **Iniciar el servidor de desarrollo**
-```bash
-npm run dev
-```
-
-6. **Abrir en el navegador**
-```
-http://localhost:3000
-```
-
-## 👤 Cuentas de Demo
+## 👤 Cuentas por Defecto
 
 ### Admin
 - **Email:** admin@biblioteca.com
 - **Contraseña:** admin123
 
-### Usuarios
-- **Email:** operador1@biblioteca.com | **Contraseña:** 123456
-- **Email:** operador2@biblioteca.com | **Contraseña:** 123456
-- **Email:** supervisor@biblioteca.com | **Contraseña:** supervisor123
+> **Nota:** El script de instalación solo crea este usuario administrador. Puedes crear más usuarios desde el panel de administración.
 
 ## 🛠️ Scripts Disponibles
 
 ```bash
 npm run dev          # Inicia el servidor de desarrollo
 npm run build        # Compila para producción
-npm run start        # Inicia el servidor de producción
+npm start            # Inicia el servidor de producción
 npm run db:push      # Sincroniza el esquema de Prisma con la BD
-npm run db:seed      # Pobla la BD con datos de prueba
+npm run db:seed      # Pobla la BD con datos iniciales
 npm run db:studio    # Abre Prisma Studio (GUI para la BD)
 ```
 
@@ -79,64 +74,37 @@ npm run db:studio    # Abre Prisma Studio (GUI para la BD)
 
 ```
 ├── app/                    # App Router de Next.js
-│   ├── api/               # API Routes
-│   │   ├── auth/         # Autenticación
-│   │   ├── libros/       # CRUD de libros
-│   │   ├── prestamos/    # CRUD de préstamos
-│   │   └── usuarios/     # CRUD de usuarios
-│   ├── dashboard/        # Páginas del dashboard
-│   ├── login/           # Página de login
-│   └── globals.css      # Estilos globales
-├── components/           # Componentes reutilizables
-├── lib/                 # Utilidades y configuración
-├── prisma/              # Configuración de Prisma
-│   ├── schema.prisma   # Esquema de la BD
-│   └── seed.js         # Datos de prueba
-└── types/              # Tipos de TypeScript
+│   ├── api/               # API Routes (Server Actions preferidos)
+│   ├── dashboard/         # Páginas del sistema
+│   └── login/             # Página de acceso
+├── components/             # Componentes reutilizables (UI, Exportación, Tablas)
+├── lib/                    # Utilidades, Server Actions y configuración
+├── prisma/                 # Configuración de BD y Esquema
+└── public/                 # Archivos estáticos
 ```
 
 ## 🗄️ Modelo de Datos
 
 ### Usuario (User)
-- Autenticación y autorización
-- Roles: ADMIN, USER
-- Relación con préstamos y logs de auditoría
+- Roles: ADMIN (Control total), USER (Operador de préstamos)
 
 ### Libro
-- Información completa del libro
-- Control de inventario (cantidad/disponible)
-- Campos opcionales para flexibilidad
+- Campos: Título, Autor, Código, Sig. Topográfica, Edición, Cantidad
+- Control automático de disponibilidad
 
 ### Préstamo
-- Gestión completa del ciclo de préstamo
-- Estados: ACTIVO, DEVUELTO, VENCIDO
-- Relación con libro y operador
-
-### Log de Auditoría
-- Registro de todas las acciones importantes
-- Trazabilidad completa del sistema
+- Estados: ACTIVO, DEVUELTO
+- Fechas: Préstamo, Límite, Devolución
+- Relación con Libro y Operador
 
 ## 🎨 Tecnologías
 
 - **Frontend:** Next.js 14, React 18, TailwindCSS
-- **Backend:** Next.js API Routes, NextAuth.js
+- **Backend:** Server Actions, NextAuth.js
 - **Base de Datos:** SQLite con Prisma ORM
+- **Exportación:** xlsx (Excel), jsPDF (PDF)
 - **Validación:** Zod
-- **Autenticación:** NextAuth.js con bcrypt
-
-## 📝 Notas
-
-- La BD SQLite está en `prisma/dev.db`
-- Los datos de semilla incluyen 15 libros y 13 préstamos de ejemplo
-- El sistema valida usuarios morosos (no permite préstamos si tienen libros pendientes)
-- Los administradores tienen acceso completo, los usuarios solo pueden operar préstamos
-
-## 🔒 Seguridad
-
-- Contraseñas hasheadas con bcrypt
-- Autenticación por sesión con NextAuth
-- Validación en frontend y backend
-- Control de acceso basado en roles
+- **UI:** Sonner (Toasts), Heroicons
 
 ## 📄 Licencia
 

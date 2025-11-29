@@ -4,6 +4,8 @@ import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import { useSession } from 'next-auth/react'
 import Link from 'next/link'
+import { obtenerUsuarioPorId, actualizarUsuario } from '@/lib/actions/usuarios'
+import { toast } from 'sonner'
 
 export default function EditarUsuarioPage({ params }: { params: { id: string } }) {
     const router = useRouter()
@@ -25,11 +27,11 @@ export default function EditarUsuarioPage({ params }: { params: { id: string } }
     useEffect(() => {
         const fetchUsuario = async () => {
             try {
-                const response = await fetch(`/api/usuarios/${params.id}`)
-                if (!response.ok) {
-                    throw new Error('Error al cargar el usuario')
+                const usuario = await obtenerUsuarioPorId(params.id)
+
+                if (!usuario) {
+                    throw new Error('Usuario no encontrado')
                 }
-                const usuario = await response.json()
 
                 setFormData({
                     name: usuario.name || '',
@@ -39,6 +41,7 @@ export default function EditarUsuarioPage({ params }: { params: { id: string } }
                 })
             } catch (err: any) {
                 setError(err.message)
+                toast.error('Error al cargar usuario')
             } finally {
                 setLoadingData(false)
             }
@@ -54,6 +57,7 @@ export default function EditarUsuarioPage({ params }: { params: { id: string } }
 
         try {
             const updateData: any = {
+                id: params.id,
                 name: formData.name,
                 email: formData.email,
             }
@@ -68,21 +72,18 @@ export default function EditarUsuarioPage({ params }: { params: { id: string } }
                 updateData.role = formData.role
             }
 
-            const response = await fetch(`/api/usuarios/${params.id}`, {
-                method: 'PUT',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify(updateData),
-            })
+            const result = await actualizarUsuario(updateData)
 
-            if (!response.ok) {
-                const data = await response.json()
-                throw new Error(data.error || 'Error al actualizar el usuario')
+            if (!result.success) {
+                throw new Error(result.error || 'Error al actualizar el usuario')
             }
 
+            toast.success('Usuario actualizado correctamente')
             router.push('/dashboard/usuarios')
             router.refresh()
         } catch (err: any) {
             setError(err.message)
+            toast.error(err.message)
         } finally {
             setLoading(false)
         }
