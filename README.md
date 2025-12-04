@@ -59,7 +59,7 @@ npm start
 
 > **Nota:** El script de instalación solo crea este usuario administrador. Puedes crear más usuarios desde el panel de administración.
 
-## 🛠️ Scripts Disponibles
+## Scripts Disponibles
 
 ```bash
 npm run dev          # Inicia el servidor de desarrollo
@@ -70,7 +70,7 @@ npm run db:seed      # Pobla la BD con datos iniciales
 npm run db:studio    # Abre Prisma Studio (GUI para la BD)
 ```
 
-## 📁 Estructura del Proyecto
+## Estructura del Proyecto
 
 ```
 ├── app/                    # App Router de Next.js
@@ -83,7 +83,7 @@ npm run db:studio    # Abre Prisma Studio (GUI para la BD)
 └── public/                 # Archivos estáticos
 ```
 
-## 🗄️ Modelo de Datos
+## Modelo de Datos
 
 ### Usuario (User)
 - Roles: ADMIN (Control total), USER (Operador de préstamos)

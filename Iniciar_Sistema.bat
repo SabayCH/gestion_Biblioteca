@@ -1,19 +1,27 @@
 @echo off
 title Sistema de Biblioteca
+cd /d "%~dp0"
+
 echo ==========================================
 echo      SISTEMA DE GESTION DE BIBLIOTECA
 echo ==========================================
 echo.
 echo Iniciando servicios...
 
-:: Cambiar al directorio del script
-cd /d "%~dp0"
-
 :: Verificar si existe el archivo de build válido
 if not exist ".next\BUILD_ID" (
-    echo Detectado falta de archivos de construccion.
-    echo Construyendo aplicacion (esto puede tardar unos minutos)...
+    echo [AVISO] No se encontro una version construida del sistema.
+    echo Construyendo aplicacion ahora (esto puede tardar unos minutos)...
+    echo.
     call npm run build
+    
+    if %errorlevel% neq 0 (
+        echo.
+        echo [ERROR] Fallo la construccion del sistema.
+        echo Por favor, ejecute "Instalar_Inicial.bat" para ver mas detalles.
+        pause
+        exit /b
+    )
 )
 
 echo.
@@ -29,4 +37,10 @@ echo Para salir, presione Ctrl + C o cierre esta ventana.
 echo.
 
 call npm start
+if %errorlevel% neq 0 (
+    echo.
+    echo [ERROR] El servidor se cerro inesperadamente.
+    echo Si ve un error "Could not find a production build", ejecute "Instalar_Inicial.bat".
+    pause
+)
 pause

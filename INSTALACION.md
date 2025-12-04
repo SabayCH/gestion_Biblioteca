@@ -1,103 +1,97 @@
-# Guía de Instalación y Despliegue Local
+# Guía de Instalación Manual - Sistema de Biblioteca
 
-Esta guía detalla los pasos para instalar y ejecutar el Sistema de Gestión de Biblioteca en una nueva computadora (Windows).
+Esta guía detalla los pasos para instalar y ejecutar el sistema **manualmente** usando la terminal. Este es el método más seguro y recomendado si tienes problemas con los scripts automáticos.
+
+---
 
 ## 1. Requisitos Previos
 
-Antes de empezar, necesitas instalar los siguientes programas en la computadora destino:
+Asegúrate de tener instalado **Node.js** (Versión LTS 18, 20 o superior).
+*   Para verificar, abre una terminal (CMD o PowerShell) y escribe: `node -v`
+*   Si sale un número de versión (ej. `v20.10.0`), estás listo.
 
-1.  **Node.js (Versión LTS)**:
-    *   Descarga e instala la versión "LTS" (Long Term Support) desde: [https://nodejs.org/](https://nodejs.org/)
-    *   Durante la instalación, asegúrate de marcar todas las casillas predeterminadas.
+---
 
-2.  **Git (Opcional pero recomendado)**:
-    *   Descarga desde: [https://git-scm.com/download/win](https://git-scm.com/download/win)
-    *   Si no quieres instalar Git, puedes copiar la carpeta del proyecto mediante una memoria USB.
+## 2. Preparación de la Carpeta
 
-## 2. Copiar el Proyecto
+1.  Copia la carpeta del proyecto a tu computadora.
+2.  **IMPORTANTE**: Si la carpeta tiene una subcarpeta llamada `node_modules`, **BÓRRALA**.
+    *   Esto es vital para evitar conflictos si vienes de otra computadora.
+    *   También borra la carpeta `.next` si existe.
 
-Tienes dos opciones:
+---
 
-*   **Opción A (Con Git)**: Clonar el repositorio.
-    ```bash
-    git clone https://github.com/SabayCH/gestion_Biblioteca.git
-    cd gestion_Biblioteca
-    ```
+## 3. Instalación Paso a Paso (Terminal)
 
-*   **Opción B (Sin Git)**:
-    1.  Copia toda la carpeta de tu proyecto actual a una memoria USB.
-    2.  Pégala en el Escritorio o Documentos de la nueva computadora.
-    3.  **Importante**: No necesitas copiar la carpeta `node_modules` (es muy pesada y se reinstalará).
+Abre una terminal (CMD o PowerShell) **dentro de la carpeta del proyecto**.
+*(Truco: Entra a la carpeta, escribe `cmd` en la barra de dirección de arriba y presiona Enter)*.
 
-## 3. Instalación de Dependencias
+### Paso 1: Instalar Librerías
+Escribe este comando y espera a que termine:
+```bash
+npm install
+```
+*Si ves advertencias amarillas (warn), ignóralas. Si ves errores rojos (error), revisa tu conexión a internet.*
 
-1.  Abre la terminal (PowerShell o CMD).
-2.  Navega hasta la carpeta del proyecto:
-    ```bash
-    cd ruta\a\tu\carpeta\gestion_Biblioteca
-    ```
-3.  Ejecuta el comando de instalación:
-    ```bash
-    npm install
-    ```
-    *Esto descargará todas las librerías necesarias.*
+### Paso 2: Configurar Entorno
+1.  Busca el archivo `.env.example`.
+2.  Haz una copia y llámala `.env`.
+3.  (Opcional) Abre `.env` con el Bloc de Notas. Asegúrate de que `DATABASE_URL` sea `"file:./dev.db"`.
 
-## 4. Configuración del Entorno
+### Paso 3: Configurar Base de Datos
+Ejecuta estos dos comandos, uno por uno:
 
-1.  En la carpeta del proyecto, busca el archivo `.env.example`.
-2.  Haz una copia de ese archivo y renómbralo a `.env` (sin el .example).
-3.  Abre el archivo `.env` con el Bloc de Notas y asegúrate de que tenga este contenido:
-
-    ```env
-    DATABASE_URL="file:./dev.db"
-    NEXTAUTH_URL="http://localhost:3000"
-    NEXTAUTH_SECRET="una_clave_secreta_muy_larga_y_segura_123"
-    ```
-
-## 5. Configuración de la Base de Datos
-
-Para crear la base de datos localmente, ejecuta este comando en la terminal:
-
+Generar la base de datos:
 ```bash
 npx prisma migrate deploy
 ```
 
-*Esto creará el archivo `prisma/dev.db` con todas las tablas necesarias.*
-
-(Opcional) Si quieres crear el usuario administrador por defecto:
+Crear usuario administrador (admin@biblioteca.com):
 ```bash
 npx prisma db seed
 ```
 
-## 6. Ejecutar la Aplicación
+### Paso 4: Construir la Aplicación (Build)
+Este paso optimiza el sistema para que sea rápido. Puede tardar unos minutos:
+```bash
+npm run build
+```
 
-### Opción A: Modo Desarrollo (Más fácil para probar)
-Simplemente ejecuta:
+---
+
+## 4. Ejecutar el Sistema
+
+Una vez completados los pasos anteriores, tienes dos formas de usar el sistema:
+
+### Opción A: Modo Producción (Recomendado para uso diario)
+Es más rápido y estable.
+```bash
+npm start
+```
+*   Luego abre tu navegador en: `http://localhost:3000`
+
+### Opción B: Modo Desarrollo (Para pruebas)
+Si quieres hacer cambios en el código.
 ```bash
 npm run dev
 ```
-La aplicación estará disponible en: `http://localhost:3000`
 
-### Opción B: Modo Producción (Más rápido y estable)
-1.  Construye la aplicación (solo se hace una vez o cuando hay cambios):
-    ```bash
-    npm run build
-    ```
-2.  Inicia el servidor:
-    ```bash
-    npm start
-    ```
+---
 
-## 7. Crear un Acceso Directo (Alternativa Manual)
+## 5. Solución de Problemas Comunes
 
-Si el archivo `.bat` no te funciona o prefieres hacerlo manualmente:
+### Error de Permisos (EPERM / -4048)
+Si te sale un error que dice "operation not permitted" o "EPERM":
+1.  Cierra **todas** las terminales abiertas.
+2.  Si usas **OneDrive**, pausa la sincronización o mueve la carpeta fuera de OneDrive (ej. a `C:\Proyectos`).
+3.  Vuelve a intentar el comando que falló.
 
-1.  Haz clic derecho en el Escritorio > **Nuevo** > **Acceso directo**.
-2.  En "Escriba la ubicación del elemento", pega lo siguiente (reemplaza `RUTA_DE_TU_CARPETA` por la ruta real):
-    ```cmd
-    cmd /k "cd /d RUTA_DE_TU_CARPETA && npm start"
-    ```
-    *Ejemplo: `cmd /k "cd /d C:\Users\Admin\Desktop\gestion_Biblioteca && npm start"`*
-3.  Haz clic en **Siguiente**, ponle de nombre "Sistema Biblioteca" y finalizar.
+### Error de Red (ECONNRESET)
+Si falla el `npm install`:
+1.  Ejecuta: `npm cache clean --force`
+2.  Intenta de nuevo: `npm install`
 
-**Nota**: Para que esto funcione, ya debes haber ejecutado `npm run build` al menos una vez en la terminal.
+### Error "Build not found"
+Si al ejecutar `npm start` te dice que no encuentra el build:
+1.  Significa que saltaste el Paso 4.
+2.  Ejecuta `npm run build` y espera a que termine.

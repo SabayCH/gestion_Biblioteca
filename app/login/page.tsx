@@ -111,17 +111,7 @@ export default function LoginPage() {
           </form>
 
           {/* Demo credentials */}
-          <div className="mt-6 pt-6 border-t border-gray-100">
-            <p className="text-xs text-gray-500 text-center mb-3">Cuentas de demostración:</p>
-            <div className="space-y-2 text-xs text-gray-600">
-              <div className="bg-purple-50 px-3 py-2 rounded-lg">
-                <strong className="text-purple-700">Admin:</strong> admin@biblioteca.com / admin123
-              </div>
-              <div className="bg-gray-50 px-3 py-2 rounded-lg">
-                <strong className="text-gray-700">Usuario:</strong> operador1@biblioteca.com / 123456
-              </div>
-            </div>
-          </div>
+
         </div>
       </div>
     </div>
